@@ -14,46 +14,37 @@ function spikes(bs){if(!s.spikes)return [];let dirs=s.placement==='corners'?[[-1
 function spikeSdf(x,y,p){let u=(x-p.x)*p.nx+(y-p.y)*p.ny,v=Math.abs(-(x-p.x)*p.ny+(y-p.y)*p.nx),t=Math.max(0,Math.min(1,u/Math.max(1,p.len)));return Math.max(v-(p.half*(1-t)+s.roundness*.001*p.half),Math.max(-u,u-p.len))}
 function bridges(bs){let out=[];for(let i=0;i<bs.length;i++)for(let j=i+1;j<bs.length;j++){let a=bs[i],b=bs[j],vx=b.x-a.x,vy=b.y-a.y,dist=Math.hypot(vx,vy);if(dist<1)continue;let ux=vx/dist,uy=vy/dist;let da=sdf(a.x+ux*dist*.5,a.y+uy*dist*.5,a),db=sdf(b.x-ux*dist*.5,b.y-uy*dist*.5,b),gap=Math.max(0,da+db);if(gap>s.distance)continue;let r1=Math.min(a.w,a.h)*.37,r2=Math.min(b.w,b.h)*.37;out.push({ax:a.x+ux*r1,ay:a.y+uy*r1,bx:b.x-ux*r2,by:b.y-uy*r2,gap})}return out}
 function renderMask(){
-  // Full-resolution vector paths: no low-resolution SDF bitmap or upscaling.
-  const bs=boxes(), out=document.createElement('canvas');out.width=W;out.height=H;
-  const g=out.getContext('2d');g.fillStyle=s.bubble;
-  const roundRect=(b)=>{let r=Math.max(0,Math.min(s.radius,b.w/2,b.h/2));g.save();g.translate(b.x,b.y);g.rotate(b.a);g.beginPath();g.roundRect(-b.w/2,-b.h/2,b.w,b.h,r);g.fill();g.restore()};
-  // Bridges are drawn underneath the boxes, with their ends embedded inside both shapes.
-  // Each path is a continuous, tapered cubic ribbon rather than a detached line.
-  for(let i=0;i<bs.length;i++)for(let j=i+1;j<bs.length;j++){
-    const a=bs[i],b=bs[j],vx=b.x-a.x,vy=b.y-a.y,dist=Math.hypot(vx,vy);
-    if(dist<1)continue;
-    const ux=vx/dist,uy=vy/dist,nx=-uy,ny=ux;
-    const reach=(q)=>{let lo=0,hi=Math.hypot(q.w,q.h);
-      for(let k=0;k<13;k++){let mid=(lo+hi)/2;if(sdf(q.x+ux*mid,q.y+uy*mid,q)<0)lo=mid;else hi=mid}return lo};
-    const ra=reach(a),rb=(()=>{let lo=0,hi=Math.hypot(b.w,b.h);for(let k=0;k<13;k++){let mid=(lo+hi)/2;if(sdf(b.x-ux*mid,b.y-uy*mid,b)<0)lo=mid;else hi=mid}return lo})();
-    const gap=dist-ra-rb;if(gap>s.distance||gap<0)continue;
-    const fade=1-gap/Math.max(1,s.distance);
-    const waist=Math.max(1.8,(3+s.strength*.18)*(.35+.65*fade));
-    const shoulder=Math.max(waist+2,Math.min(ra,rb,18+s.strength*.3));
-    const ax=a.x+ux*Math.max(0,ra-shoulder*.6),ay=a.y+uy*Math.max(0,ra-shoulder*.6);
-    const bx=b.x-ux*Math.max(0,rb-shoulder*.6),by=b.y-uy*Math.max(0,rb-shoulder*.6);
-    const mx=(ax+bx)/2,my=(ay+by)/2;
-    g.beginPath();g.moveTo(ax+nx*shoulder,ay+ny*shoulder);
-    g.bezierCurveTo(mx+nx*waist,my+ny*waist,mx+nx*waist,my+ny*waist,bx+nx*shoulder,by+ny*shoulder);
-    g.lineTo(bx-nx*shoulder,by-ny*shoulder);
-    g.bezierCurveTo(mx-nx*waist,my-ny*waist,mx-nx*waist,my-ny*waist,ax-nx*shoulder,ay-ny*shoulder);
-    g.closePath();g.fill();
+  // One implicit surface for every box: no bridge paths, triangles or detached geometry.
+  // A polynomial smooth union gives the original liquid joining behaviour.
+  const bs=boxes(), sp=spikes(bs), mask=document.createElement('canvas');
+  mask.width=W;mask.height=H;
+  const g=mask.getContext('2d'), pixels=g.createImageData(W,H);
+  const rgb=s.bubble.match(/[0-9a-f]{2}/gi).map(v=>parseInt(v,16));
+  // Smooth union begins acting at a separation of roughly k/2.
+  // Distance extends the field's influence; strength adds softness at the neck.
+  const k=s.distance*2+s.strength*.8;
+  const pad=Math.max(0,k*.27);
+  const bounds=bs.map(q=>({b:q,r:Math.hypot(q.w,q.h)*.5+pad}));
+  const spikeBounds=sp.map(p=>({p,r:p.len+p.half+3}));
+  // Antialiased boundary at native canvas resolution.
+  for(let y=0;y<H;y++){
+    for(let x=0;x<W;x++){
+      const px=x+.5,py=y+.5;
+      let d=1e5;
+      for(const o of bounds){
+        if(Math.abs(px-o.b.x)>o.r||Math.abs(py-o.b.y)>o.r)continue;
+        d=smooth(d,sdf(px,py,o.b),k);
+      }
+      for(const o of spikeBounds){
+        if(Math.hypot(px-o.p.x,py-o.p.y)>o.r)continue;
+        d=Math.min(d,spikeSdf(px,py,o.p));
+      }
+      const alpha=Math.max(0,Math.min(1,.5-d));
+      if(alpha>0){let z=(y*W+x)*4;pixels.data[z]=rgb[0];pixels.data[z+1]=rgb[1];pixels.data[z+2]=rgb[2];pixels.data[z+3]=Math.round(alpha*255)}
+    }
   }
-  // Controlled spikes are smooth closed shapes attached to chosen edges.
-  for(const p of spikes(bs)){
-    const nx=-p.ny,ny=p.nx,base=Math.max(2,p.half),len=Math.max(0,p.len);
-    const rootX=p.x-p.nx*base*.65,rootY=p.y-p.ny*base*.65;
-    const tipX=p.x+p.nx*len,tipY=p.y+p.ny*len;
-    const tipRound=Math.min(base*.6,len*.22)*s.roundness/100;
-    g.beginPath();g.moveTo(rootX+nx*base,rootY+ny*base);
-    g.quadraticCurveTo(p.x+p.nx*len*.55+nx*base*.35,p.y+p.ny*len*.55+ny*base*.35,tipX-p.nx*tipRound+nx*tipRound*.15,tipY-p.ny*tipRound+ny*tipRound*.15);
-    g.quadraticCurveTo(tipX,tipY,tipX-p.nx*tipRound-nx*tipRound*.15,tipY-p.ny*tipRound-ny*tipRound*.15);
-    g.quadraticCurveTo(p.x+p.nx*len*.55-nx*base*.35,p.y+p.ny*len*.55-ny*base*.35,rootX-nx*base,rootY-ny*base);
-    g.closePath();g.fill();
-  }
-  for(const b of bs)roundRect(b);
-  return out;
+  g.putImageData(pixels,0,0);
+  return mask;
 }
 function draw(exporting=false){ctx.fillStyle=s.bg;ctx.fillRect(0,0,W,H);if(s.showGrid&&!exporting){ctx.strokeStyle='#ffffff16';for(let x=0;x<W;x+=s.grid){ctx.beginPath();ctx.moveTo(x,0);ctx.lineTo(x,H);ctx.stroke()}for(let y=0;y<H;y+=s.grid){ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(W,y);ctx.stroke()}}if(dirty||!shapeCache){shapeCache=renderMask();dirty=false}ctx.imageSmoothingEnabled=true;ctx.drawImage(shapeCache,0,0,W,H);ctx.fillStyle=s.ink;ctx.textBaseline='middle';for(let f of fields){ctx.save();ctx.translate(f.x,f.y);ctx.rotate(f.rotation*Math.PI/180);if(f.type==='image'){if(f.img)ctx.drawImage(f.img,-f.width/2,-f.height/2,f.width,f.height)}else{let m=metrics(f);ctx.font=f.size+'px "'+f.font+'"';ctx.textAlign=f.align;let x=f.align==='left'?-m.max/2:f.align==='right'?m.max/2:0;m.lines.forEach((line,i)=>ctx.fillText(line,x,(i-(m.lines.length-1)/2)*m.lh))}ctx.restore()}if(!exporting&&chosen()){let f=chosen(),m=f.type==='text'?metrics(f):null,w=m?m.max:f.width,h=m?m.lines.length*m.lh:f.height;ctx.save();ctx.translate(f.x,f.y);ctx.rotate(f.rotation*Math.PI/180);ctx.strokeStyle='#ff4ecb';ctx.setLineDash([5,4]);ctx.strokeRect(-w/2-s.pad,-h/2-s.pad,w+2*s.pad,h+2*s.pad);ctx.restore()}}
 function render(changeShape=true){if(changeShape)dirty=true;if(frame)return;frame=requestAnimationFrame(()=>{frame=0;draw()})}
