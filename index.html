@@ -1,9 +1,9 @@
 <!doctype html><html lang="en"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>TextMelt</title><style>
 *{box-sizing:border-box}body{margin:0;background:#171717;color:#eee;font:13px Arial}button,input,textarea,select{font:inherit}button{cursor:pointer;background:#333;border:1px solid #555;color:white;border-radius:5px;padding:9px}button:hover{background:#444}.app{height:100vh;display:grid;grid-template-columns:210px minmax(0,1fr) 270px}aside{padding:16px;background:#202020;overflow:auto}main{display:flex;flex-direction:column;min-width:0}.toolbar{padding:12px;display:flex;justify-content:space-between;border-bottom:1px solid #444}.stage{flex:1;min-height:0;overflow:auto;display:grid;place-items:center;padding:24px;background:#292929}canvas{width:720px;height:900px;max-width:none;box-shadow:0 8px 40px #0008;touch-action:none}details{padding:13px 0;border-bottom:1px solid #444}summary{cursor:pointer;font-weight:bold}label{display:flex;justify-content:space-between;gap:8px;margin:12px 0 5px}input[type=range],textarea,select{width:100%}textarea,select,input[type=number]{background:#303030;color:white;border:1px solid #555;padding:8px;border-radius:5px}textarea{height:90px}.layer{border:1px solid #444;padding:10px;margin:7px 0;cursor:pointer;border-radius:5px}.active{border-color:#dfff37}.full{width:100%;margin:4px 0}.primary{background:#dfff37;color:#111}.muted{color:#aaa;font-size:11px;line-height:1.6}@media(max-width:850px){.app{grid-template-columns:160px minmax(0,1fr) 200px}aside{padding:9px}}
-</style><div class="app"><aside><h2>TEXTMELT ✳</h2><p class="muted">GOOP & SPIKE STUDIO · v0.3</p><button id="add" class="full primary">+ ADD TEXT</button><button id="addImage" class="full">+ ADD IMAGE</button><input id="file" type="file" accept="image/png,image/jpeg,image/webp" hidden><p class="muted">LAYERS</p><div id="layers"></div><button id="duplicate" class="full">Duplicate layer</button><p class="muted">Drag to move · Shift-drag to rotate · Double click to edit · Delete to remove</p></aside><main><div class="toolbar">LIVE SHAPE ENGINE <span><button id="exportPNG">PNG</button> <button id="exportSVG">SVG</button></span></div><div class="stage"><canvas id="canvas" width="720" height="900"></canvas></div></main><aside><details open><summary>SELECTED LAYER</summary><div id="textSettings"><label>Text</label><textarea id="text"></textarea><label>Font</label><select id="font"><option>Arial</option><option>Georgia</option><option>Impact</option><option>Courier New</option><option>Times New Roman</option></select><label>Upload font</label><input id="fontFile" type="file" accept=".ttf,.otf,.woff,.woff2"><label>Font size</label><input id="size" type="range" min="12" max="120"><label>Line spacing</label><input id="line" type="range" min=".65" max="2.5" step=".05"><label>Alignment</label><select id="align"><option>center</option><option>left</option><option>right</option></select></div><div id="imageSettings" hidden><label>Image width</label><input id="width" type="range" min="20" max="600"><label>Image height</label><input id="height" type="range" min="20" max="600"></div><label>Rotation</label><input id="rotation" type="range" min="-180" max="180"></details><details open><summary>BUBBLE / MELT</summary><label>Padding</label><input id="pad" type="range" min="0" max="70"><label>Corner radius (0 = sharp)</label><input id="radius" type="range" min="0" max="65"><label>Melt strength</label><input id="strength" type="range" min="0" max="90"><label>Melt distance</label><input id="distance" type="range" min="0" max="240"><p class="muted">Distance controls how far apart boxes can connect. Strength controls rounding.</p></details><details><summary>CONTROLLED SPIKES</summary><label>Enable <input id="spikes" type="checkbox"></label><div id="spikeSettings" hidden><label>Placement</label><select id="placement"><option value="corners">Corners</option><option value="topbottom">Top / bottom</option><option value="sides">Left / right</option><option value="all">All sides</option></select><label>Count per box</label><input id="count" type="range" min="0" max="8"><label>Length</label><input id="length" type="range" min="0" max="120"><label>Base width</label><input id="spikeWidth" type="range" min="2" max="50"><label>Tip roundness</label><input id="roundness" type="range" min="0" max="100"><label>Seed</label><input id="seed" type="number"></div></details><details open><summary>COLORS & GRID</summary><label>Bubble <input id="bubble" type="color"></label><label>Text <input id="ink" type="color"></label><label>Background <input id="bg" type="color"></label><label>Grid size</label><input id="grid" type="range" min="10" max="100" step="5"><label>Show grid <input id="showGrid" type="checkbox"></label><label>Snap to grid <input id="snap" type="checkbox"></label></details></aside></div><script>
+</style><div class="app"><aside><h2>TEXTMELT ✳</h2><p class="muted">GOOP & SPIKE STUDIO · v0.4</p><button id="add" class="full primary">+ ADD TEXT</button><button id="addImage" class="full">+ ADD IMAGE</button><input id="file" type="file" accept="image/png,image/jpeg,image/webp" hidden><p class="muted">LAYERS</p><div id="layers"></div><button id="duplicate" class="full">Duplicate layer</button><p class="muted">Drag to move · Shift-drag to rotate · Double click to edit · Delete to remove</p></aside><main><div class="toolbar">LIVE SHAPE ENGINE <span><button id="exportPNG">PNG</button> <button id="exportSVG">SVG</button></span></div><div class="stage"><canvas id="canvas" width="720" height="900"></canvas></div></main><aside><details open><summary>SELECTED LAYER</summary><div id="textSettings"><label>Text</label><textarea id="text"></textarea><label>Font</label><select id="font"><option>Arial</option><option>Georgia</option><option>Impact</option><option>Courier New</option><option>Times New Roman</option></select><label>Upload font</label><input id="fontFile" type="file" accept=".ttf,.otf,.woff,.woff2"><label>Font size</label><input id="size" type="range" min="12" max="120"><label>Line spacing</label><input id="line" type="range" min=".65" max="2.5" step=".05"><label>Alignment</label><select id="align"><option>center</option><option>left</option><option>right</option></select></div><div id="imageSettings" hidden><label>Image width</label><input id="width" type="range" min="20" max="600"><label>Image height</label><input id="height" type="range" min="20" max="600"></div><label>Rotation</label><input id="rotation" type="range" min="-180" max="180"></details><details open><summary>BUBBLE / MELT</summary><label>Padding</label><input id="pad" type="range" min="0" max="70"><label>Corner radius (0 = sharp)</label><input id="radius" type="range" min="0" max="65"><label>Melt strength</label><input id="strength" type="range" min="0" max="90"><label>Melt distance</label><input id="distance" type="range" min="0" max="240"><p class="muted">Distance controls how far apart boxes can connect. Strength controls rounding.</p></details><details><summary>CONTROLLED SPIKES</summary><label>Enable <input id="spikes" type="checkbox"></label><div id="spikeSettings" hidden><label>Placement</label><select id="placement"><option value="corners">Corners</option><option value="topbottom">Top / bottom</option><option value="sides">Left / right</option><option value="all">All sides</option></select><label>Count per box</label><input id="count" type="range" min="0" max="8"><label>Length</label><input id="length" type="range" min="0" max="120"><label>Base width</label><input id="spikeWidth" type="range" min="2" max="50"><label>Tip roundness</label><input id="roundness" type="range" min="0" max="100"><label>Seed</label><input id="seed" type="number"></div></details><details open><summary>COLORS & GRID</summary><label>Bubble <input id="bubble" type="color"></label><label>Text <input id="ink" type="color"></label><label>Background <input id="bg" type="color"></label><label>Grid size</label><input id="grid" type="range" min="10" max="100" step="5"><label>Show grid <input id="showGrid" type="checkbox"></label><label>Snap to grid <input id="snap" type="checkbox"></label></details></aside></div><script>
 const $=s=>document.getElementById(s),C=$('canvas'),ctx=C.getContext('2d'),W=720,H=900;
 const s={pad:10,radius:9,strength:24,distance:46,spikes:false,placement:'corners',count:2,length:24,spikeWidth:10,roundness:55,seed:4,bubble:'#f5f5ee',ink:'#080808',bg:'#000000',grid:20,showGrid:false,snap:false};
-let fields=[{id:1,type:'text',text:'L O T',x:360,y:105,size:47,line:1.0,font:'Arial',align:'center',rotation:0},{id:2,type:'text',text:'0019-3 E9\\nLIFE STREAM',x:360,y:260,size:32,line:1.14,font:'Arial',align:'center',rotation:0},{id:3,type:'text',text:'VISIONS OF SOUND',x:360,y:395,size:31,line:1.0,font:'Arial',align:'center',rotation:0},{id:4,type:'text',text:'SEPTEMBER 20\\n(THIS FRIDAY)',x:360,y:535,size:31,line:1.15,font:'Arial',align:'center',rotation:0},{id:5,type:'text',text:'BERLIN 19:00',x:360,y:655,size:32,line:1.0,font:'Arial',align:'center',rotation:0},{id:6,type:'text',text:'10:00 LA, 13:00 NYC\\n18:00 UK, 20:00 MOSCOW\\nTWITCH.COM/LOT_2046',x:360,y:785,size:25,line:1.12,font:'Arial',align:'center',rotation:0}],selected=1,next=7,drag=null,frame=0,shapeCache=null,dirty=true;
+let fields=[{id:1,type:'text',text:'L O T',x:360,y:105,size:47,line:1.0,font:'Arial',align:'center',rotation:0},{id:2,type:'text',text:'0019-3 E9\nLIFE STREAM',x:360,y:260,size:32,line:1.14,font:'Arial',align:'center',rotation:0},{id:3,type:'text',text:'VISIONS OF SOUND',x:360,y:395,size:31,line:1.0,font:'Arial',align:'center',rotation:0},{id:4,type:'text',text:'SEPTEMBER 20\n(THIS FRIDAY)',x:360,y:535,size:31,line:1.15,font:'Arial',align:'center',rotation:0},{id:5,type:'text',text:'BERLIN 19:00',x:360,y:655,size:32,line:1.0,font:'Arial',align:'center',rotation:0},{id:6,type:'text',text:'10:00 LA, 13:00 NYC\n18:00 UK, 20:00 MOSCOW\nTWITCH.COM/LOT_2046',x:360,y:785,size:25,line:1.12,font:'Arial',align:'center',rotation:0}],selected=1,next=7,drag=null,frame=0,shapeCache=null,dirty=true;
 const chosen=()=>fields.find(f=>f.id===selected);
 function metrics(f){ctx.font=f.size+'px "'+f.font+'"';let lines=f.text.split('\n'),widths=lines.map(t=>ctx.measureText(t||' ').width),max=Math.max(...widths),lh=f.size*f.line;return {lines,widths,max,lh}}
 function boxes(){let out=[];for(let f of fields){if(f.type==='image'){out.push({x:f.x,y:f.y,w:f.width+s.pad*2,h:f.height+s.pad*2,a:f.rotation*Math.PI/180,id:f.id});continue}let m=metrics(f),a=f.rotation*Math.PI/180;for(let i=0;i<m.lines.length;i++){let dx=f.align==='left'?(m.widths[i]-m.max)/2:f.align==='right'?(m.max-m.widths[i])/2:0,dy=(i-(m.lines.length-1)/2)*m.lh;out.push({x:f.x+dx*Math.cos(a)-dy*Math.sin(a),y:f.y+dx*Math.sin(a)+dy*Math.cos(a),w:m.widths[i]+s.pad*2,h:f.size*1.1+s.pad*2,a,id:f.id})}}return out}
@@ -13,40 +13,91 @@ function random(n){let t=Math.sin(n*127.1+s.seed*91.7)*43758.5453;return t-Math.
 function spikes(bs){if(!s.spikes)return [];let dirs=s.placement==='corners'?[[-1,-1],[1,-1],[-1,1],[1,1]]:s.placement==='topbottom'?[[0,-1],[0,1]]:s.placement==='sides'?[[-1,0],[1,0]]:[[0,-1],[0,1],[-1,0],[1,0]],out=[];bs.forEach((b,j)=>{for(let i=0;i<s.count;i++){let [dx,dy]=dirs[i%dirs.length],slope=(random(j*13+i*37)-.5)*.65,ax=dx===0?slope*b.w:dx*b.w*.49,ay=dy===0?slope*b.h:dy*b.h*.49,co=Math.cos(b.a),si=Math.sin(b.a),norm=Math.hypot(dx,dy),nx=(dx*co-dy*si)/norm,ny=(dx*si+dy*co)/norm;out.push({x:b.x+ax*co-ay*si,y:b.y+ax*si+ay*co,nx,ny,len:s.length*(.85+.3*random(j*31+i+88)),half:s.spikeWidth/2})}});return out}
 function spikeSdf(x,y,p){let u=(x-p.x)*p.nx+(y-p.y)*p.ny,v=Math.abs(-(x-p.x)*p.ny+(y-p.y)*p.nx),t=Math.max(0,Math.min(1,u/Math.max(1,p.len)));return Math.max(v-(p.half*(1-t)+s.roundness*.001*p.half),Math.max(-u,u-p.len))}
 function bridges(bs){let out=[];for(let i=0;i<bs.length;i++)for(let j=i+1;j<bs.length;j++){let a=bs[i],b=bs[j],vx=b.x-a.x,vy=b.y-a.y,dist=Math.hypot(vx,vy);if(dist<1)continue;let ux=vx/dist,uy=vy/dist;let da=sdf(a.x+ux*dist*.5,a.y+uy*dist*.5,a),db=sdf(b.x-ux*dist*.5,b.y-uy*dist*.5,b),gap=Math.max(0,da+db);if(gap>s.distance)continue;let r1=Math.min(a.w,a.h)*.37,r2=Math.min(b.w,b.h)*.37;out.push({ax:a.x+ux*r1,ay:a.y+uy*r1,bx:b.x-ux*r2,by:b.y-uy*r2,gap})}return out}
-function renderMask(){
-  // Compact-support SDF union. Preserve the exact box silhouette outside local necks.
-  // No bridges are drawn. Only the two nearest surface distances interact.
-  const bs=boxes(), sp=spikes(bs), mask=document.createElement('canvas');
-  mask.width=W;mask.height=H;
-  const g=mask.getContext('2d'), pixels=g.createImageData(W,H);
-  const rgb=s.bubble.match(/[0-9a-f]{2}/gi).map(v=>parseInt(v,16));
-  const k=Math.max(0,Math.min(s.distance,180));
-  const softness=Math.max(0,Math.min(1,s.strength/90));
-  const bounds=bs.map(b=>({b,extent:Math.hypot(b.w,b.h)*.5+k*.5+2}));
-  for(let y=0;y<H;y++)for(let x=0;x<W;x++){
-    const px=x+.5,py=y+.5;
-    let d1=1e5,d2=1e5;
-    for(const o of bounds){
-      if(Math.abs(px-o.b.x)>o.extent||Math.abs(py-o.b.y)>o.extent)continue;
-      const d=sdf(px,py,o.b);
-      if(d<d1){d2=d1;d1=d}else if(d<d2)d2=d;
-    }
-    // A union of the two nearest contours. k is the complete transition width,
-    // not a radius applied to every box in the scene.
-    let d=d1;
-    if(k>0&&d2<k*.5&&d1<k*.5){
-      const h=Math.max(0,1-Math.abs(d1-d2)/k);
-      d=Math.min(d1,d2)-softness*k*.25*h*h;
-    }
-    for(const p of sp){
-      if(Math.abs(px-p.x)>p.len+p.half+3||Math.abs(py-p.y)>p.len+p.half+3)continue;
-      d=Math.min(d,spikeSdf(px,py,p));
-    }
-    const alpha=Math.max(0,Math.min(1,.5-d));
-    if(alpha>0){const z=(y*W+x)*4;pixels.data[z]=rgb[0];pixels.data[z+1]=rgb[1];pixels.data[z+2]=rgb[2];pixels.data[z+3]=Math.round(alpha*255)}
+// A single implicit surface: no bridges, polygons or separate connection objects.
+// Smooth union is restricted to facing contours, with a compact falloff.
+function shapeField(step=1){
+ const bs=boxes(),nx=Math.ceil(W/step)+1,ny=Math.ceil(H/step)+1;
+ const f=new Float32Array(nx*ny);f.fill(10000);
+ const reach=Math.max(0,s.distance),blend=s.strength/90;
+ const k=reach*(.35+.65*blend);
+ // Exact signed distance to each rounded rectangle, including rotated ones.
+ // Blend only nearby *different* shapes and never add an external connector.
+ for(let y=0;y<ny;y++)for(let x=0;x<nx;x++){
+  const px=x*step,py=y*step;let a=1e4,b=1e4;
+  for(const box of bs){
+   const limit=Math.hypot(box.w,box.h)*.5+k+4;
+   if(Math.abs(px-box.x)>limit||Math.abs(py-box.y)>limit)continue;
+   const d=sdf(px,py,box);
+   if(d<a){b=a;a=d}else if(d<b)b=d;
   }
-  g.putImageData(pixels,0,0);
-  return mask;
+  let d=a;
+  if(k>0&&blend>0&&b<k*.5&&a<k*.5){
+   const h=Math.max(0,1-Math.abs(a-b)/k);
+   // Polynomial smooth minimum; unchanged outside the blending neighborhood.
+   d=Math.min(a,b)-k*.25*h*h*blend;
+  }
+  f[y*nx+x]=d;
+ }
+ // Spikes are an optional local silhouette treatment, not melt connectors.
+ if(s.spikes){
+  const sp=spikes(bs);
+  for(const p of sp){
+   const pad=p.len+p.half+4;
+   const x0=Math.max(0,Math.floor((p.x-pad)/step)),x1=Math.min(nx-1,Math.ceil((p.x+pad)/step));
+   const y0=Math.max(0,Math.floor((p.y-pad)/step)),y1=Math.min(ny-1,Math.ceil((p.y+pad)/step));
+   for(let y=y0;y<=y1;y++)for(let x=x0;x<=x1;x++){
+    const i=y*nx+x;f[i]=Math.min(f[i],spikeSdf(x*step,y*step,p));
+   }
+  }
+ }
+ return {f,nx,ny,step};
+}
+function renderMask(){
+ const field=shapeField(1),{f,nx}=field,mask=document.createElement('canvas');
+ mask.width=W;mask.height=H;
+ const g=mask.getContext('2d'),pixels=g.createImageData(W,H);
+ const rgb=s.bubble.match(/[0-9a-f]{2}/gi).map(v=>parseInt(v,16));
+ for(let y=0;y<H;y++)for(let x=0;x<W;x++){
+  const d=(f[y*nx+x]+f[y*nx+x+1]+f[(y+1)*nx+x]+f[(y+1)*nx+x+1])*.25;
+  const alpha=Math.max(0,Math.min(1,.5-d));
+  const z=(y*W+x)*4;
+  pixels.data[z]=rgb[0];pixels.data[z+1]=rgb[1];pixels.data[z+2]=rgb[2];pixels.data[z+3]=Math.round(alpha*255);
+ }
+ g.putImageData(pixels,0,0);return mask;
+}
+// Trace the same implicit surface into real vector contours for SVG export.
+function traceField(field){
+ const {f,nx,ny,step}=field,verts=new Map(),links=new Map(),edges=[];
+ function vertex(x,y,e,v){
+  let key,px,py,a,b;
+  if(e===0){key='h'+(y*nx+x);px=x;py=y;a=v[0];b=v[1]}
+  else if(e===1){key='v'+(y*nx+x+1);px=x+1;py=y;a=v[1];b=v[2]}
+  else if(e===2){key='h'+((y+1)*nx+x);px=x;py=y+1;a=v[3];b=v[2]}
+  else{key='v'+(y*nx+x);px=x;py=y;a=v[0];b=v[3]}
+  if(!verts.has(key)){const t=Math.max(0,Math.min(1,Math.abs(a-b)>1e-8?-a/(b-a):.5));verts.set(key,[(px+(e===0||e===2?t:0))*step,(py+(e===1||e===3?t:0))*step])}
+  return key;
+ }
+ function edge(a,b){const i=edges.length;edges.push([a,b]);for(const k of [a,b]){if(!links.has(k))links.set(k,[]);links.get(k).push(i)}}
+ for(let y=0;y<ny-1;y++)for(let x=0;x<nx-1;x++){
+  const i=y*nx+x,v=[f[i],f[i+1],f[i+nx+1],f[i+nx]],inside=v.map(a=>a<=0),cross=[];
+  for(let e=0;e<4;e++)if(inside[e]!==inside[(e+1)%4])cross.push(e);
+  if(cross.length===2)edge(vertex(x,y,cross[0],v),vertex(x,y,cross[1],v));
+  else if(cross.length===4){
+   const center=v.reduce((a,b)=>a+b,0)<=0,pairs=center===inside[0]?[[0,1],[2,3]]:[[0,3],[1,2]];
+   for(const [a,b] of pairs)edge(vertex(x,y,a,v),vertex(x,y,b,v));
+  }
+ }
+ const used=new Uint8Array(edges.length);let path='';
+ for(let i=0;i<edges.length;i++){
+  if(used[i])continue;let current=edges[i][0],first=current,ei=i;const pts=[];
+  while(ei!==undefined&&!used[ei]){
+   used[ei]=1;pts.push(verts.get(current));const e=edges[ei];
+   current=e[0]===current?e[1]:e[0];if(current===first)break;
+   ei=links.get(current)?.find(j=>!used[j]);
+  }
+  if(pts.length>2)path+='M'+pts.map(p=>p.map(n=>n.toFixed(2)).join(',')).join('L')+'Z';
+ }
+ return path;
 }
 function draw(exporting=false){ctx.fillStyle=s.bg;ctx.fillRect(0,0,W,H);if(s.showGrid&&!exporting){ctx.strokeStyle='#ffffff16';for(let x=0;x<W;x+=s.grid){ctx.beginPath();ctx.moveTo(x,0);ctx.lineTo(x,H);ctx.stroke()}for(let y=0;y<H;y+=s.grid){ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(W,y);ctx.stroke()}}if(dirty||!shapeCache){shapeCache=renderMask();dirty=false}ctx.imageSmoothingEnabled=true;ctx.drawImage(shapeCache,0,0,W,H);ctx.fillStyle=s.ink;ctx.textBaseline='middle';for(let f of fields){ctx.save();ctx.translate(f.x,f.y);ctx.rotate(f.rotation*Math.PI/180);if(f.type==='image'){if(f.img)ctx.drawImage(f.img,-f.width/2,-f.height/2,f.width,f.height)}else{let m=metrics(f);ctx.font=f.size+'px "'+f.font+'"';ctx.textAlign=f.align;let x=f.align==='left'?-m.max/2:f.align==='right'?m.max/2:0;m.lines.forEach((line,i)=>ctx.fillText(line,x,(i-(m.lines.length-1)/2)*m.lh))}ctx.restore()}if(!exporting&&chosen()){let f=chosen(),m=f.type==='text'?metrics(f):null,w=m?m.max:f.width,h=m?m.lines.length*m.lh:f.height;ctx.save();ctx.translate(f.x,f.y);ctx.rotate(f.rotation*Math.PI/180);ctx.strokeStyle='#ff4ecb';ctx.setLineDash([5,4]);ctx.strokeRect(-w/2-s.pad,-h/2-s.pad,w+2*s.pad,h+2*s.pad);ctx.restore()}}
 function render(changeShape=true){if(changeShape)dirty=true;if(frame)return;frame=requestAnimationFrame(()=>{frame=0;draw()})}
@@ -66,6 +117,6 @@ C.onpointerup=()=>{drag=null;refresh()};C.onpointercancel=()=>drag=null;C.ondblc
 document.onkeydown=e=>{if(['INPUT','TEXTAREA','SELECT'].includes(document.activeElement.tagName))return;if((e.key==='Delete'||e.key==='Backspace')&&chosen()){fields=fields.filter(f=>f.id!==selected);select(fields[0]?.id)}};
 function save(blob,name){let a=document.createElement('a'),url=URL.createObjectURL(blob);a.href=url;a.download=name;a.click();setTimeout(()=>URL.revokeObjectURL(url),1000)}
 $('exportPNG').onclick=()=>{draw(true);C.toBlob(b=>save(b,'textmelt.png'));render(false)};
-$('exportSVG').onclick=()=>{draw(true);let data=C.toDataURL('image/png'),svg='<svg xmlns="http://www.w3.org/2000/svg" width="720" height="900"><image width="720" height="900" href="'+data+'"/></svg>';save(new Blob([svg],{type:'image/svg+xml'}),'textmelt.svg');render(false)};
+$('exportSVG').onclick=()=>{const path=traceField(shapeField(1));const esc=t=>String(t).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/"/g,'&quot;');let svg='<svg xmlns="http://www.w3.org/2000/svg" width="720" height="900" viewBox="0 0 720 900"><rect width="720" height="900" fill="'+s.bg+'"/><path fill="'+s.bubble+'" fill-rule="evenodd" d="'+path+'"/>';for(const f of fields){svg+='<g transform="translate('+f.x+' '+f.y+') rotate('+f.rotation+')">';if(f.type==='text'){const m=metrics(f),anchor=f.align==='left'?'start':f.align==='right'?'end':'middle',x=f.align==='left'?-m.max/2:f.align==='right'?m.max/2:0;svg+='<text font-family="'+esc(f.font)+'" font-size="'+f.size+'" fill="'+s.ink+'" text-anchor="'+anchor+'" dominant-baseline="middle">';m.lines.forEach((line,i)=>svg+='<tspan x="'+x+'" y="'+((i-(m.lines.length-1)/2)*m.lh)+'">'+esc(line)+'</tspan>');svg+='</text>'}else if(f.img){svg+='<image x="'+(-f.width/2)+'" y="'+(-f.height/2)+'" width="'+f.width+'" height="'+f.height+'" href="'+f.img.src+'"/>'}svg+='</g>'}svg+='</svg>';save(new Blob([svg],{type:'image/svg+xml'}),'textmelt.svg')};
 select(1);
 </script></html>
