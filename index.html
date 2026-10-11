@@ -1,8 +1,8 @@
 <!doctype html><html lang="en"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>TextMelt</title><style>
 *{box-sizing:border-box}body{margin:0;background:#171717;color:#eee;font:13px Arial}button,input,textarea,select{font:inherit}button{cursor:pointer;background:#333;border:1px solid #555;color:white;border-radius:5px;padding:9px}button:hover{background:#444}.app{height:100vh;display:grid;grid-template-columns:210px minmax(0,1fr) 270px}aside{padding:16px;background:#202020;overflow:auto}main{display:flex;flex-direction:column;min-width:0}.toolbar{padding:12px;display:flex;justify-content:space-between;border-bottom:1px solid #444}.stage{flex:1;min-height:0;overflow:auto;display:grid;place-items:center;padding:24px;background:#292929}canvas{width:720px;height:900px;max-width:none;box-shadow:0 8px 40px #0008;touch-action:none}details{padding:13px 0;border-bottom:1px solid #444}summary{cursor:pointer;font-weight:bold}label{display:flex;justify-content:space-between;gap:8px;margin:12px 0 5px}input[type=range],textarea,select{width:100%}textarea,select,input[type=number]{background:#303030;color:white;border:1px solid #555;padding:8px;border-radius:5px}textarea{height:90px}.layer{border:1px solid #444;padding:10px;margin:7px 0;cursor:pointer;border-radius:5px}.active{border-color:#dfff37}.full{width:100%;margin:4px 0}.primary{background:#dfff37;color:#111}.muted{color:#aaa;font-size:11px;line-height:1.6}@media(max-width:850px){.app{grid-template-columns:160px minmax(0,1fr) 200px}aside{padding:9px}}
-</style><div class="app"><aside><h2>TEXTMELT ✳</h2><p class="muted">GOOP & SPIKE STUDIO · v0.9</p><button id="add" class="full primary">+ ADD TEXT</button><button id="addImage" class="full">+ ADD IMAGE</button><input id="file" type="file" accept="image/png,image/jpeg,image/webp" hidden><p class="muted">LAYERS</p><div id="layers"></div><button id="duplicate" class="full">Duplicate layer</button><p class="muted">Drag to move · Shift-drag to rotate · Double click to edit · Delete to remove</p></aside><main><div class="toolbar">LIVE SHAPE ENGINE <span><button id="exportPNG">PNG</button> <button id="exportSVG">SVG</button></span></div><div class="stage"><canvas id="canvas" width="720" height="900"></canvas></div></main><aside><details open><summary>SELECTED LAYER</summary><div id="textSettings"><label>Text</label><textarea id="text"></textarea><label>Font</label><select id="font"><option>Arial</option><option>Georgia</option><option>Impact</option><option>Courier New</option><option>Times New Roman</option></select><label>Upload font</label><input id="fontFile" type="file" accept=".ttf,.otf,.woff,.woff2"><label>Font size</label><input id="size" type="range" min="12" max="120"><label>Line spacing</label><input id="line" type="range" min=".65" max="2.5" step=".05"><label>Alignment</label><select id="align"><option>center</option><option>left</option><option>right</option></select></div><div id="imageSettings" hidden><label>Image width</label><input id="width" type="range" min="20" max="600"><label>Image height</label><input id="height" type="range" min="20" max="600"></div><label>Rotation</label><input id="rotation" type="range" min="-180" max="180"></details><details open><summary>BUBBLE / MELT</summary><label>Padding</label><input id="pad" type="range" min="0" max="70"><label>Corner radius (0 = sharp)</label><input id="radius" type="range" min="0" max="65"><label>Goop amount</label><input id="strength" type="range" min="0" max="90"><label style="display:none">Connection reach (paused)</label><input id="distance" type="range" min="0" max="360" hidden><p class="muted">Move the text shapes close together to create smooth, organic metashapes. Long-distance connections are temporarily disabled.</p></details><details><summary>CONTROLLED SPIKES</summary><label>Enable <input id="spikes" type="checkbox"></label><div id="spikeSettings" hidden><label>Placement</label><select id="placement"><option value="corners">Corners</option><option value="topbottom">Top / bottom</option><option value="sides">Left / right</option><option value="all">All sides</option></select><label>Count per box</label><input id="count" type="range" min="0" max="8"><label>Length</label><input id="length" type="range" min="0" max="120"><label>Base width</label><input id="spikeWidth" type="range" min="2" max="50"><label>Tip roundness</label><input id="roundness" type="range" min="0" max="100"><label>Seed</label><input id="seed" type="number"></div></details><details open><summary>COLORS & GRID</summary><label>Bubble <input id="bubble" type="color"></label><label>Text <input id="ink" type="color"></label><label>Background <input id="bg" type="color"></label><label>Grid size</label><input id="grid" type="range" min="10" max="100" step="5"><label>Show grid <input id="showGrid" type="checkbox"></label><label>Snap to grid <input id="snap" type="checkbox"></label></details></aside></div><script>
+</style><div class="app"><aside><h2>TEXTMELT ✳</h2><p class="muted">GOOP & SPIKE STUDIO · v0.9</p><button id="add" class="full primary">+ ADD TEXT</button><button id="addImage" class="full">+ ADD IMAGE</button><input id="file" type="file" accept="image/png,image/jpeg,image/webp" hidden><p class="muted">LAYERS</p><div id="layers"></div><button id="duplicate" class="full">Duplicate layer</button><p class="muted">Drag to move · Shift-drag to rotate · Double click to edit · Delete to remove</p></aside><main><div class="toolbar">LIVE SHAPE ENGINE <span><button id="exportPNG">PNG</button> <button id="exportSVG">SVG</button></span></div><div class="stage"><canvas id="canvas" width="720" height="900"></canvas></div></main><aside><details open><summary>SELECTED LAYER</summary><div id="textSettings"><label>Text</label><textarea id="text"></textarea><label>Font</label><select id="font"><option>Arial</option><option>Georgia</option><option>Impact</option><option>Courier New</option><option>Times New Roman</option></select><label>Upload font</label><input id="fontFile" type="file" accept=".ttf,.otf,.woff,.woff2"><label>Font size</label><input id="size" type="range" min="12" max="120"><label>Line spacing</label><input id="line" type="range" min=".65" max="2.5" step=".05"><label>Alignment</label><select id="align"><option>center</option><option>left</option><option>right</option></select></div><div id="imageSettings" hidden><label>Image width</label><input id="width" type="range" min="20" max="600"><label>Image height</label><input id="height" type="range" min="20" max="600"></div><label>Rotation</label><input id="rotation" type="range" min="-180" max="180"></details><details open><summary>BUBBLE / MELT</summary><label>Padding</label><input id="pad" type="range" min="0" max="70"><label>Corner radius (0 = sharp)</label><input id="radius" type="range" min="0" max="65"><label>Goop amount</label><input id="strength" type="range" min="0" max="90"><label>Connection reach</label><input id="distance" type="range" min="0" max="240"><p class="muted">Narrow local necks between facing edges. Goop amount controls the surrounding melt.</p></details><details><summary>CONTROLLED SPIKES</summary><label>Enable <input id="spikes" type="checkbox"></label><div id="spikeSettings" hidden><label>Placement</label><select id="placement"><option value="corners">Corners</option><option value="topbottom">Top / bottom</option><option value="sides">Left / right</option><option value="all">All sides</option></select><label>Count per box</label><input id="count" type="range" min="0" max="8"><label>Length</label><input id="length" type="range" min="0" max="120"><label>Base width</label><input id="spikeWidth" type="range" min="2" max="50"><label>Tip roundness</label><input id="roundness" type="range" min="0" max="100"><label>Seed</label><input id="seed" type="number"></div></details><details open><summary>COLORS & GRID</summary><label>Bubble <input id="bubble" type="color"></label><label>Text <input id="ink" type="color"></label><label>Background <input id="bg" type="color"></label><label>Grid size</label><input id="grid" type="range" min="10" max="100" step="5"><label>Show grid <input id="showGrid" type="checkbox"></label><label>Snap to grid <input id="snap" type="checkbox"></label></details></aside></div><script>
 const $=s=>document.getElementById(s),C=$('canvas'),ctx=C.getContext('2d'),W=720,H=900;
-const s={pad:10,radius:9,strength:48,distance:0,spikes:false,placement:'corners',count:2,length:24,spikeWidth:10,roundness:55,seed:4,bubble:'#f5f5ee',ink:'#080808',bg:'#000000',grid:20,showGrid:false,snap:false};
+const s={pad:10,radius:9,strength:48,distance:95,spikes:false,placement:'corners',count:2,length:24,spikeWidth:10,roundness:55,seed:4,bubble:'#f5f5ee',ink:'#080808',bg:'#000000',grid:20,showGrid:false,snap:false};
 let fields=[{id:1,type:'text',text:'TEXT\nMELT',x:360,y:220,size:80,line:1.05,font:'Arial',align:'center',rotation:0},{id:2,type:'text',text:'GOOP & SPIKE',x:360,y:450,size:43,line:1.1,font:'Arial',align:'center',rotation:0},{id:3,type:'text',text:'DRAG AROUND',x:360,y:650,size:38,line:1.1,font:'Arial',align:'center',rotation:0}],selected=1,next=4,drag=null,frame=0,shapeCache=null,dirty=true;
 const chosen=()=>fields.find(f=>f.id===selected);
 function metrics(f){ctx.font=f.size+'px "'+f.font+'"';let lines=f.text.split('\n'),widths=lines.map(t=>ctx.measureText(t||' ').width),max=Math.max(...widths),lh=f.size*f.line;return {lines,widths,max,lh}}
@@ -23,12 +23,53 @@ function bridges(bs){let out=[];for(let i=0;i<bs.length;i++)for(let j=i+1;j<bs.l
 // Ported from Goop Grid Studio: every module contributes to one implicit
 // field using the same compact polynomial smooth-max operation.
 // TextMelt uses negative-inside SDF, so this is its sign-reversed equivalent.
+// Localized necks for facing horizontal/vertical edges. Unlike broad smooth
+// union, each connection has a finite transverse width and rounded shoulders.
+function localNecks(bs){
+ const out=[],reach=Math.max(0,s.distance);
+ if(reach<1)return out;
+ for(let i=0;i<bs.length;i++)for(let j=i+1;j<bs.length;j++){
+  const a=bs[i],b=bs[j];
+  if(a.id===b.id)continue;
+  // Preserve the ordinary smooth-union behavior for rotated or corner contacts.
+  if(Math.abs(Math.sin(a.a))>.035||Math.abs(Math.sin(b.a))>.035)continue;
+  for(const axis of ['x','y']){
+   const along=axis==='x'?'y':'x',half=axis==='x'?'h':'w',extent=axis==='x'?'w':'h';
+   let left=a,right=b;
+   if(left[axis]>right[axis]){left=b;right=a}
+   const gap=right[axis]-right[extent]/2-(left[axis]+left[extent]/2);
+   if(gap<=3||gap>reach)continue;
+   const overlap=Math.min(left[along]+left[half]/2,right[along]+right[half]/2)-Math.max(left[along]-left[half]/2,right[along]-right[half]/2);
+   if(overlap<Math.min(left[half],right[half])*.2)continue;
+   const low=Math.max(left[along]-left[half]/2,right[along]-right[half]/2),high=Math.min(left[along]+left[half]/2,right[along]+right[half]/2);
+   const center=Math.max(low+4,Math.min(high-4,(left[along]+right[along])/2));
+   const width=Math.min(22,Math.max(5,Math.min(overlap*.23,9+s.strength*.15)));
+   const fade=Math.min(1,(reach-gap)/Math.max(12,reach*.3));
+   if(fade<=0)continue;
+   const start=left[axis]+left[extent]/2-3,end=right[axis]-right[extent]/2+3;
+   out.push({axis,center,start,end,width:width*fade});
+  }
+ }
+ return out;
+}
+function neckDistance(x,y,n){
+ const u=n.axis==='x'?x:y,v=n.axis==='x'?y:x;
+ const length=n.end-n.start;
+ if(length<=0)return 1e4;
+ const t=Math.max(0,Math.min(1,(u-n.start)/length));
+ // Smooth narrow waist; flared ends disappear into the original boxes.
+ const flare=1+1.5*Math.pow(Math.abs(t*2-1),3);
+ const radius=n.width*flare;
+ const q=Math.max(n.start-u,0,u-n.end);
+ return Math.hypot(q,Math.max(0,Math.abs(v-n.center)-radius))+Math.min(Math.max(q,Math.abs(v-n.center)-radius),0);
+}
 function shapeField(step=1){
  const bs=boxes(),nx=Math.ceil(W/step)+1,ny=Math.ceil(H/step)+1;
  const f=new Float32Array(nx*ny);
  f.fill(10000);
  const k=Math.max(0,s.strength)*1.15;
  const sp=s.spikes?spikes(bs):[];
+ const necks=localNecks(bs);
  // A deterministic ordering prevents the result depending on layer selection.
  const ordered=[...bs].sort((a,b)=>a.y-b.y||a.x-b.x);
  for(const box of ordered){
@@ -40,6 +81,19 @@ function shapeField(step=1){
    const i=y*nx+x,d=sdf(x*step,y*step,box),old=f[i];
    if(k>.001){const h=Math.max(k-Math.abs(old-d),0)/k;f[i]=Math.min(old,d)-h*h*k*.25}
    else f[i]=Math.min(old,d);
+  }
+ }
+ for(const n of necks){
+  const rad=n.width*3+3;
+  const x0=Math.max(0,Math.floor((n.axis==='x'?n.start-rad:n.center-rad)/step));
+  const x1=Math.min(nx-1,Math.ceil((n.axis==='x'?n.end+rad:n.center+rad)/step));
+  const y0=Math.max(0,Math.floor((n.axis==='y'?n.start-rad:n.center-rad)/step));
+  const y1=Math.min(ny-1,Math.ceil((n.axis==='y'?n.end+rad:n.center+rad)/step));
+  for(let y=y0;y<=y1;y++)for(let x=x0;x<=x1;x++){
+   const i=y*nx+x,d=neckDistance(x*step,y*step,n),old=f[i];
+   const k2=Math.min(12,Math.max(3,s.strength*.18));
+   const blend=Math.max(k2-Math.abs(old-d),0)/k2;
+   f[i]=Math.min(old,d)-blend*blend*k2*.25;
   }
  }
  for(const p of sp){
