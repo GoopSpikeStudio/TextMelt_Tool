@@ -183,6 +183,10 @@ function goopPairs(bs){
   const waist=s.strength*.28*fade*(1+1.65*proximity*proximity);
   const shoulder=(5+s.softness*.32*(1+.55*proximity))*fade;
   if(waist<.1||shoulder<.1)continue;
+  // Don't deform either silhouette until a continuous neck can actually
+  // reach both surfaces. Otherwise a nearby third layer creates a lone bulge.
+  // This also keeps distant objects visually independent.
+  if(gap>2*waist+shoulder*.55)continue;
   out.push({a,b,p,q,ux,uy,gap,waist,shoulder,midX:(p.x+q.x)/2,midY:(p.y+q.y)/2});
  }
  return out;
