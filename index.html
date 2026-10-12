@@ -202,8 +202,10 @@ function shapeField(step=1){
    const capsule=Math.hypot(px-ax-vx*t,py-ay-vy*t)-r;
    if(capsule>shoulder||d<-(shoulder+r))continue;
    const k=shoulder;
+   // Cubic smooth minimum: C2 at the blend boundaries and C1 at its
+   // centre. Keep the original shoulder radius to avoid inflated bridges.
    const blend=Math.max(0,k-Math.abs(d-capsule))/k;
-   d=Math.min(d,capsule)-blend*blend*k*.25;
+   d=Math.min(d,capsule)-blend*blend*blend*k/6;
   }
   for(const p of sp){
    if(Math.abs(px-p.x)<p.len+p.half+3&&Math.abs(py-p.y)<p.len+p.half+3)
