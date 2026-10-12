@@ -76,8 +76,27 @@ main{position:relative;overflow:hidden}
 const $=s=>document.getElementById(s),C=$('canvas'),ctx=C.getContext('2d');let W=960,H=760;
 const s={pad:10,radius:9,strength:36,distance:90,softness:55,spikes:false,placement:'corners',count:2,length:24,spikeWidth:10,roundness:55,seed:4,bubble:'#f5f5ee',ink:'#080808',gridColor:'#c8c5c0',gridBg:'#88847e',grid:20,snap:false};
 let multi=new Set([1]);
-let fields=[{id:1,type:'text',text:'TEXT\nMELT',x:480,y:165,size:80,line:1.05,font:'Arial',align:'center',rotation:0},{id:2,type:'text',text:'GOOP & SPIKE',x:480,y:365,size:43,line:1.1,font:'Arial',align:'center',rotation:0},{id:3,type:'text',text:'DRAG AROUND',x:480,y:550,size:38,line:1.1,font:'Arial',align:'center',rotation:0}],selected=1,next=4,drag=null,frame=0,shapeCache=null,dirty=true;
+let fields=[{id:1,type:'image',name:'LogoMelt.png',img:null,x:480,y:165,width:280,height:140,rotation:0},{id:2,type:'text',text:'GOOP & SPIKE',x:480,y:365,size:43,line:1.1,font:'Arial',align:'center',rotation:0},{id:3,type:'text',text:'DRAG AROUND',x:480,y:550,size:38,line:1.1,font:'Arial',align:'center',rotation:0}],selected=1,next=4,drag=null,frame=0,shapeCache=null,dirty=true;
 const chosen=()=>fields.find(f=>f.id===selected);
+const studioLogo=new Image();
+studioLogo.onload=()=>{
+ const layer=fields.find(f=>f.id===1);
+ if(!layer||layer.type!=='image')return;
+ const ratio=Math.min(320/studioLogo.naturalWidth,180/studioLogo.naturalHeight);
+ layer.width=Math.round(studioLogo.naturalWidth*ratio);
+ layer.height=Math.round(studioLogo.naturalHeight*ratio);
+ layer.img=studioLogo;
+ refresh();render();
+};
+studioLogo.onerror=()=>{
+ const layer=fields.find(f=>f.id===1);
+ if(layer&&layer.type==='image'){
+ Object.assign(layer,{type:'text',text:'TEXT\\nMELT',size:80,line:1.05,font:'Arial',align:'center'});
+ refresh();render();
+ }
+};
+studioLogo.src='assets/LogoMelt.png';
+
 function fontStack(name){return name==='Helvetica Neue'?'"Helvetica Neue",Helvetica,Arial,sans-serif':'"'+name.replace(/"/g,'')+'",Arial,sans-serif'}
 document.fonts.ready.then(()=>{shapeCache=null;dirty=true;render()});
 document.fonts.addEventListener('loadingdone',()=>{shapeCache=null;dirty=true;render()});
