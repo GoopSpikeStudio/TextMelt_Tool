@@ -115,7 +115,7 @@ function metrics(f){
  const widths=raw.map(m=>m.width),max=Math.max(...widths),lh=f.size*f.line;
  const asc=Math.max(...raw.map(m=>m.actualBoundingBoxAscent||f.size*.72));
  const desc=Math.max(...raw.map(m=>m.actualBoundingBoxDescent||f.size*.22));
- return {lines,widths,max,lh,inkCenter:(desc-asc)/2,inkHeight:asc+desc};
+ return {lines,widths,max,lh,inkCenter:(asc-desc)/2,inkHeight:asc+desc};
 }
 function boxes(){let out=[];for(let f of fields){if(f.type==='image'){out.push({x:f.x,y:f.y,w:f.width+s.pad*2,h:f.height+s.pad*2,a:f.rotation*Math.PI/180,id:f.id});continue}let m=metrics(f),a=f.rotation*Math.PI/180;for(let i=0;i<m.lines.length;i++){let dx=f.align==='left'?(m.widths[i]-m.max)/2:f.align==='right'?(m.max-m.widths[i])/2:0,dy=(i-(m.lines.length-1)/2)*m.lh;out.push({x:f.x+dx*Math.cos(a)-dy*Math.sin(a),y:f.y+dx*Math.sin(a)+dy*Math.cos(a),w:m.widths[i]+s.pad*2,h:m.inkHeight+s.pad*2,a,id:f.id})}}return out}
 function sdf(x,y,b){let co=Math.cos(b.a),si=Math.sin(b.a),px=Math.abs((x-b.x)*co+(y-b.y)*si),py=Math.abs(-(x-b.x)*si+(y-b.y)*co),r=Math.min(s.radius,b.w/2,b.h/2),u=px-b.w/2+r,v=py-b.h/2+r;return Math.hypot(Math.max(u,0),Math.max(v,0))+Math.min(Math.max(u,v),0)-r}
