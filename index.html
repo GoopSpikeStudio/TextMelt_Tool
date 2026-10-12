@@ -172,11 +172,17 @@ function goopPairs(bs){
    if(sdf(p.x+ux*2,p.y+uy*2,a)<sdf(p.x-ux*2,p.y-uy*2,a)+.5)continue;
    if(sdf(q.x-ux*2,q.y-uy*2,b)<sdf(q.x+ux*2,q.y+uy*2,b)+.5)continue;
   }
-  const fade=Math.min(1,Math.max(0,(reach-gap)/Math.max(15,reach*.3)));
-  const proximity=Math.max(0,1-gap/reach);
-  // Neck thickness grows continuously as the shapes approach each other.
-  const waist=Math.max(1,s.strength*.28*fade*(1+1.65*proximity*proximity));
-  const shoulder=5+s.softness*.32*(1+.55*proximity);
+  // Reach is the detection limit, not an instruction to inflate distant
+  // surfaces. Use a compact physical influence zone for the actual melt.
+  // This avoids isolated bulges before a meaningful bridge can form.
+  const influence=Math.min(reach,Math.max(28,Math.min(82,s.strength*.7+s.softness*.45+20)));
+  if(gap>=influence)continue;
+  const proximity=Math.max(0,1-gap/influence);
+  const fade=proximity*proximity*(3-2*proximity);
+  // Taper the entire bridge to zero at the influence boundary.
+  const waist=s.strength*.28*fade*(1+1.65*proximity*proximity);
+  const shoulder=(5+s.softness*.32*(1+.55*proximity))*fade;
+  if(waist<.1||shoulder<.1)continue;
   out.push({a,b,p,q,ux,uy,gap,waist,shoulder,midX:(p.x+q.x)/2,midY:(p.y+q.y)/2});
  }
  return out;
@@ -196,8 +202,8 @@ function shapeField(step=1){
    // Keep the bridge narrow in open space, but grow a broad concave fillet
    // at contact. The fillet is limited to the local junction, not the whole
    // silhouette, so unrelated edges stay clean.
-   const proximity=Math.max(0,1-pair.gap/Math.max(1,s.distance));
-   const shoulder=Math.max(2,pair.shoulder);
+   const proximity=Math.max(0,1-pair.gap/Math.max(1,Math.min(s.distance,82)));
+   const shoulder=pair.shoulder;
    const fillet=shoulder*(.65+1.45*proximity*proximity);
    const inset=shoulder*.7+r*.5;
    const ax=pair.p.x-pair.ux*inset,ay=pair.p.y-pair.uy*inset;
