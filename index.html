@@ -172,21 +172,11 @@ function goopPairs(bs){
    if(sdf(p.x+ux*2,p.y+uy*2,a)<sdf(p.x-ux*2,p.y-uy*2,a)+.5)continue;
    if(sdf(q.x-ux*2,q.y-uy*2,b)<sdf(q.x+ux*2,q.y+uy*2,b)+.5)continue;
   }
-  // Reach is the detection limit, not an instruction to inflate distant
-  // surfaces. Use a compact physical influence zone for the actual melt.
-  // This avoids isolated bulges before a meaningful bridge can form.
-  const influence=Math.min(reach,Math.max(28,Math.min(82,s.strength*.7+s.softness*.45+20)));
-  if(gap>=influence)continue;
-  const proximity=Math.max(0,1-gap/influence);
-  const fade=proximity*proximity*(3-2*proximity);
-  // Taper the entire bridge to zero at the influence boundary.
-  const waist=s.strength*.28*fade*(1+1.65*proximity*proximity);
+  const proximity=Math.max(0,1-gap/reach);
+  const fade=Math.min(1,Math.max(0,(reach-gap)/Math.max(15,reach*.3)));
+  const waist=Math.max(.05,s.strength*.28*fade*(1+1.65*proximity*proximity));
   const shoulder=(5+s.softness*.32*(1+.55*proximity))*fade;
-  if(waist<.1||shoulder<.1)continue;
-  // Don't deform either silhouette until a continuous neck can actually
-  // reach both surfaces. Otherwise a nearby third layer creates a lone bulge.
-  // This also keeps distant objects visually independent.
-  if(gap>2*waist+shoulder*.55)continue;
+  if(shoulder<.05)continue;
   out.push({a,b,p,q,ux,uy,gap,waist,shoulder,midX:(p.x+q.x)/2,midY:(p.y+q.y)/2});
  }
  return out;
@@ -210,8 +200,10 @@ function shapeField(step=1){
    const shoulder=pair.shoulder;
    const fillet=shoulder*(.65+1.45*proximity*proximity);
    const inset=shoulder*.7+r*.5;
-   const ax=pair.p.x-pair.ux*inset,ay=pair.p.y-pair.uy*inset;
-   const bx=pair.q.x+pair.ux*inset,by=pair.q.y+pair.uy*inset;
+   const insetA=Math.min(inset,Math.min(pair.a.w,pair.a.h)*.18);
+   const insetB=Math.min(inset,Math.min(pair.b.w,pair.b.h)*.18);
+   const ax=pair.p.x-pair.ux*insetA,ay=pair.p.y-pair.uy*insetA;
+   const bx=pair.q.x+pair.ux*insetB,by=pair.q.y+pair.uy*insetB;
    const vx=bx-ax,vy=by-ay,den=vx*vx+vy*vy;
    const t=Math.max(0,Math.min(1,((px-ax)*vx+(py-ay)*vy)/den));
    const capsule=Math.hypot(px-ax-vx*t,py-ay-vy*t)-r;
@@ -223,7 +215,7 @@ function shapeField(step=1){
     const k=(12+s.softness*.8)*contact*contact;
     if(k>0.01){
      const da=sdf(px,py,pair.a),db=sdf(px,py,pair.b);
-     if(Math.abs(da-db)<k&&Math.min(da,db)>-k){
+     if(Math.min(Math.hypot(px-pair.p.x,py-pair.p.y),Math.hypot(px-pair.q.x,py-pair.q.y))<k*1.5+pair.waist&&Math.abs(da-db)<k&&Math.min(da,db)>-k){
       d=Math.min(d,smooth(da,db,k));
      }
     }
