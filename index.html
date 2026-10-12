@@ -193,9 +193,7 @@ function shapeField(step=1){
   // Unlike subtractive attraction, a capsule cannot pinch into an hourglass.
   for(const pair of pairs){
    const r=pair.waist;
-   // A wider blend near contact avoids the pinched, sharp shoulders.
-   const contact=Math.max(0,1-pair.gap/Math.max(1,s.distance));
-   const shoulder=Math.max(3,pair.shoulder)*(1+1.05*contact);
+   const shoulder=Math.max(2,pair.shoulder);
    const inset=shoulder*.7+r*.5;
    const ax=pair.p.x-pair.ux*inset,ay=pair.p.y-pair.uy*inset;
    const bx=pair.q.x+pair.ux*inset,by=pair.q.y+pair.uy*inset;
@@ -203,14 +201,9 @@ function shapeField(step=1){
    const t=Math.max(0,Math.min(1,((px-ax)*vx+(py-ay)*vy)/den));
    const capsule=Math.hypot(px-ax-vx*t,py-ay-vy*t)-r;
    if(capsule>shoulder||d<-(shoulder+r))continue;
-   // C2-continuous rounded union: smoother curvature than the quadratic
-   // blend, particularly where the melt neck meets a circle or flat edge.
    const k=shoulder;
-   const delta=Math.abs(d-capsule);
-   if(delta<k){
-    const t=1-(delta/k)*(delta/k);
-    d=Math.min(d,capsule)-k*t*t*.1875;
-   }else d=Math.min(d,capsule);
+   const blend=Math.max(0,k-Math.abs(d-capsule))/k;
+   d=Math.min(d,capsule)-blend*blend*k*.25;
   }
   for(const p of sp){
    if(Math.abs(px-p.x)<p.len+p.half+3&&Math.abs(py-p.y)<p.len+p.half+3)
