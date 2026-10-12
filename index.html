@@ -293,16 +293,19 @@ window.addEventListener('keyup',e=>{if(e.code==='Space'){spaceHeld=false;if(!pan
 window.addEventListener('blur',()=>{spaceHeld=false;panDrag=null;C.style.cursor=''});
 
 const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
+// Keep controls in viewport coordinates, independent of grid, zoom and pan transforms.
+const canvasHandles=[...document.querySelectorAll('.resize-handle')];
+canvasHandles.forEach(handle=>document.body.appendChild(handle));
 function placeHandles(){
  const rect=shell.getBoundingClientRect(),area=stage.getBoundingClientRect();
  const left=document.querySelector('.handle-left'),right=document.querySelector('.handle-right'),bottom=document.querySelector('.handle-bottom');
- const sideY=rect.top-area.top+rect.height/2-41;
- const bottomX=rect.left-area.left+rect.width/2-41;
- const sideVisible=sideY>=0&&sideY+82<=stage.clientHeight;
- const bottomVisible=bottomX>=0&&bottomX+82<=stage.clientWidth;
- left.style.cssText='left:'+(rect.left-area.left-13)+'px;top:'+sideY+'px;right:auto;bottom:auto;transform:none;display:'+(sideVisible&&rect.left>=area.left+8?'block':'none');
- right.style.cssText='left:'+(rect.right-area.left+6)+'px;top:'+sideY+'px;right:auto;bottom:auto;transform:none;display:'+(sideVisible&&rect.right<=area.right-8?'block':'none');
- bottom.style.cssText='left:'+bottomX+'px;top:'+(rect.bottom-area.top+6)+'px;right:auto;bottom:auto;transform:none;display:'+(bottomVisible&&rect.bottom<=area.bottom-8?'block':'none');
+ const sideY=rect.top+rect.height/2-41;
+ const bottomX=rect.left+rect.width/2-41;
+ const sideVisible=sideY>=area.top+4&&sideY+82<=area.bottom-4;
+ const bottomVisible=bottomX>=area.left+4&&bottomX+82<=area.right-4;
+ left.style.cssText='position:fixed!important;left:'+(rect.left-13)+'px;top:'+sideY+'px;right:auto;bottom:auto;transform:none;display:'+(sideVisible&&rect.left>=area.left+10?'block':'none');
+ right.style.cssText='position:fixed!important;left:'+(rect.right+6)+'px;top:'+sideY+'px;right:auto;bottom:auto;transform:none;display:'+(sideVisible&&rect.right<=area.right-10?'block':'none');
+ bottom.style.cssText='position:fixed!important;left:'+bottomX+'px;top:'+(rect.bottom+6)+'px;right:auto;bottom:auto;transform:none;display:'+(bottomVisible&&rect.bottom<=area.bottom-10?'block':'none');
 }
 function layout(){
  const minCenter=340,minSide=185;
