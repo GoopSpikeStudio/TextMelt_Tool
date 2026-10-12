@@ -160,15 +160,23 @@ function goopPairs(bs){
   let p=surface(a,b.x,b.y),q=surface(b,a.x,a.y);
   for(let t=0;t<5;t++){p=surface(a,q.x,q.y);q=surface(b,p.x,p.y)}
   const dx=q.x-p.x,dy=q.y-p.y,gap=Math.hypot(dx,dy);
-  if(gap<1||gap>=reach)continue;
-  const ux=dx/gap,uy=dy/gap;
-  // Only surfaces facing one another can attract. The gradient test is
-  // continuous and prevents shortcuts through corners or unrelated boxes.
-  if(sdf(p.x+ux*2,p.y+uy*2,a)<sdf(p.x-ux*2,p.y-uy*2,a)+.5)continue;
-  if(sdf(q.x-ux*2,q.y-uy*2,b)<sdf(q.x+ux*2,q.y+uy*2,b)+.5)continue;
+  if(gap>=reach)continue;
+  // At contact the nearest boundary points coincide. Use the centre-to-centre
+  // direction instead of dropping the connection when gap approaches zero.
+  const centerDx=b.x-a.x,centerDy=b.y-a.y,centerLen=Math.hypot(centerDx,centerDy);
+  if(centerLen<.001)continue;
+  const ux=gap>1?dx/gap:centerDx/centerLen,uy=gap>1?dy/gap:centerDy/centerLen;
+  // The facing test applies only to separated surfaces. At contact the
+  // gradient becomes ambiguous, but the bridge should stay and widen.
+  if(gap>2){
+   if(sdf(p.x+ux*2,p.y+uy*2,a)<sdf(p.x-ux*2,p.y-uy*2,a)+.5)continue;
+   if(sdf(q.x-ux*2,q.y-uy*2,b)<sdf(q.x+ux*2,q.y+uy*2,b)+.5)continue;
+  }
   const fade=Math.min(1,Math.max(0,(reach-gap)/Math.max(15,reach*.3)));
-  const waist=Math.max(1,s.strength*.28*fade);
-  const shoulder=5+s.softness*.32;
+  const proximity=Math.max(0,1-gap/reach);
+  // Neck thickness grows continuously as the shapes approach each other.
+  const waist=Math.max(1,s.strength*.28*fade*(1+1.65*proximity*proximity));
+  const shoulder=5+s.softness*.32*(1+.55*proximity);
   out.push({p,q,ux,uy,gap,waist,shoulder,midX:(p.x+q.x)/2,midY:(p.y+q.y)/2});
  }
  return out;
