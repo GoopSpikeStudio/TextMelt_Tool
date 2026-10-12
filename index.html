@@ -260,7 +260,7 @@ function select(id,add=false){
   if(multi.has(id)&&multi.size>1)multi.delete(id);else multi.add(id);
   selected=multi.has(id)?id:[...multi].at(-1);
  }else{selected=id;multi=new Set(id==null?[]:[id])}
- refresh();render(false);
+ refresh();render();
 }
 $('add').onclick=()=>{let f={id:next++,type:'text',text:'NEW TEXT',x:360,y:450,size:48,line:1.15,font:'Roboto Mono',align:'center',rotation:0};fields.push(f);select(f.id);$('text').focus();$('text').select()};
 $('addShape').onclick=()=>{const menu=$('shapeAddMenu');menu.hidden=!menu.hidden;$('addShape').setAttribute('aria-expanded',String(!menu.hidden))};
