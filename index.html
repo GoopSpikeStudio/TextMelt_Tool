@@ -65,29 +65,26 @@ function goopPairs(bs){
 function shapeField(step=1){
  const bs=boxes(),pairs=goopPairs(bs),nx=Math.ceil(W/step)+1,ny=Math.ceil(H/step)+1;
  const f=new Float32Array(nx*ny),sp=s.spikes?spikes(bs):[];
- const soft=Math.max(0,s.softness)/100;
  for(let y=0;y<ny;y++)for(let x=0;x<nx;x++){
   const px=x*step,py=y*step;
   let d=1e5;
-  // Exact hard union preserves straight edges and rounded corners.
   for(const box of bs)d=Math.min(d,sdf(px,py,box));
+  // A single positive-radius capsule joins the two boundaries. Its ends
+  // extend into the original shapes; a smooth minimum rounds the shoulders.
+  // Unlike subtractive attraction, a capsule cannot pinch into an hourglass.
   for(const pair of pairs){
-   const dx=px-pair.midX,dy=py-pair.midY;
-   const along=dx*pair.ux+dy*pair.uy;
-   const across=Math.abs(-dx*pair.uy+dy*pair.ux);
-   const half=pair.gap*.5;
-   if(Math.abs(along)>half+pair.shoulder*2||across>pair.waist+pair.shoulder*3)continue;
-   // Compact smooth radial attraction: at the center it lowers the signed
-   // distance just enough to form a waist; away from it influence vanishes
-   // with zero derivative, eliminating secondary bulges and cut-out holes.
-   const t=Math.min(1,Math.max(0,across/(pair.waist+pair.shoulder)));
-   const radial=(1-t*t);const envelope=radial*radial;
-   const longitudinal=Math.min(1,Math.max(0,(half+pair.shoulder-Math.abs(along))/Math.max(1,pair.shoulder)));
-   const axial=longitudinal*longitudinal*(3-2*longitudinal);
-   // Base gap is paid only at the midpoint, not across the entire rectangle.
-   const core=Math.max(0,half-pair.waist);
-   const pull=(core+pair.waist+soft*pair.shoulder*.18)*envelope*axial;
-   d-=Math.min(Math.max(0,d+pair.waist),pull);
+   const r=pair.waist;
+   const shoulder=Math.max(2,pair.shoulder);
+   const inset=shoulder*.7+r*.5;
+   const ax=pair.p.x-pair.ux*inset,ay=pair.p.y-pair.uy*inset;
+   const bx=pair.q.x+pair.ux*inset,by=pair.q.y+pair.uy*inset;
+   const vx=bx-ax,vy=by-ay,den=vx*vx+vy*vy;
+   const t=Math.max(0,Math.min(1,((px-ax)*vx+(py-ay)*vy)/den));
+   const capsule=Math.hypot(px-ax-vx*t,py-ay-vy*t)-r;
+   if(capsule>shoulder||d<-(shoulder+r))continue;
+   const k=shoulder;
+   const blend=Math.max(0,k-Math.abs(d-capsule))/k;
+   d=Math.min(d,capsule)-blend*blend*k*.25;
   }
   for(const p of sp){
    if(Math.abs(px-p.x)<p.len+p.half+3&&Math.abs(py-p.y)<p.len+p.half+3)
