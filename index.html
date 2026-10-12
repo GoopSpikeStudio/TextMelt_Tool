@@ -200,6 +200,7 @@ function shapeField(step=1){
   for(const pair of pairs){
    // Use the established rounded geometry without clipping the SDF by
    // half-planes. Hard or feathered directional cuts caused stray spikes.
+   const originalD=d;
    const r=pair.waist;
    // Keep the bridge narrow in open space, but grow a broad concave fillet
    // at contact. The fillet is limited to the local junction, not the whole
@@ -235,7 +236,16 @@ function shapeField(step=1){
    const k=fillet;
    const blend=Math.max(0,k-Math.abs(d-capsule))/k;
    d=Math.min(d,capsule)-blend*blend*k*.25;
-
+   // Fade the added material outside the junction, leaving opposite edges clean.
+   const joinDistance=Math.min(Math.hypot(px-pair.p.x,py-pair.p.y),Math.hypot(px-pair.q.x,py-pair.q.y));
+   const halfThickness=Math.min(pair.a.h,pair.b.h)*.5;
+   const inner=Math.max(8,Math.min(halfThickness*.28,fillet*.55+r*.3));
+   const outer=Math.max(inner+8,Math.min(halfThickness*.78,inner+Math.max(12,fillet*.8)));
+   const u=Math.max(0,Math.min(1,(outer-joinDistance)/(outer-inner)));
+   const local=u*u*(3-2*u);
+   const bridge=pair.gap>2&&t>0&&t<1?Math.max(0,1-Math.max(0,capsule)/(fillet+1)):0;
+   const weight=Math.max(local,bridge);
+   d=originalD+(d-originalD)*weight;
   }
   for(const p of sp){
    if(Math.abs(px-p.x)<p.len+p.half+3&&Math.abs(py-p.y)<p.len+p.half+3)
