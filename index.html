@@ -193,19 +193,24 @@ function shapeField(step=1){
   // Unlike subtractive attraction, a capsule cannot pinch into an hourglass.
   for(const pair of pairs){
    const r=pair.waist;
+   // Keep the bridge narrow in open space, but grow a broad concave fillet
+   // at contact. The fillet is limited to the local junction, not the whole
+   // silhouette, so unrelated edges stay clean.
+   const proximity=Math.max(0,1-pair.gap/Math.max(1,s.distance));
    const shoulder=Math.max(2,pair.shoulder);
+   const fillet=shoulder*(.65+1.45*proximity*proximity);
    const inset=shoulder*.7+r*.5;
    const ax=pair.p.x-pair.ux*inset,ay=pair.p.y-pair.uy*inset;
    const bx=pair.q.x+pair.ux*inset,by=pair.q.y+pair.uy*inset;
    const vx=bx-ax,vy=by-ay,den=vx*vx+vy*vy;
    const t=Math.max(0,Math.min(1,((px-ax)*vx+(py-ay)*vy)/den));
    const capsule=Math.hypot(px-ax-vx*t,py-ay-vy*t)-r;
-   if(capsule>shoulder||d<-(shoulder+r))continue;
-   const k=shoulder;
-   // Cubic smooth minimum: C2 at the blend boundaries and C1 at its
-   // centre. Keep the original shoulder radius to avoid inflated bridges.
+   if(capsule>fillet||d<-(fillet+r))continue;
+   // Polynomial smooth union rounds the *inside corner* between the two
+   // surfaces. The width of this fillet increases smoothly near contact.
+   const k=fillet;
    const blend=Math.max(0,k-Math.abs(d-capsule))/k;
-   d=Math.min(d,capsule)-blend*blend*blend*k/6;
+   d=Math.min(d,capsule)-blend*blend*k*.25;
   }
   for(const p of sp){
    if(Math.abs(px-p.x)<p.len+p.half+3&&Math.abs(py-p.y)<p.len+p.half+3)
