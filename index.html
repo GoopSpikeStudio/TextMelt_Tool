@@ -198,6 +198,16 @@ function shapeField(step=1){
   // extend into the original shapes; a smooth minimum rounds the shoulders.
   // Unlike subtractive attraction, a capsule cannot pinch into an hourglass.
   for(const pair of pairs){
+   // Directional melt: only modify the facing halves of each element.
+   // The original SDF remains untouched on the opposite sides, avoiding
+   // bumps on the top of the upper text field or bottom of the lower one.
+   const cx=pair.b.x-pair.a.x,cy=pair.b.y-pair.a.y;
+   const clen=Math.hypot(cx,cy);
+   if(clen<.001)continue;
+   const dirX=cx/clen,dirY=cy/clen;
+   const towardB=(px-pair.a.x)*dirX+(py-pair.a.y)*dirY;
+   const towardA=(pair.b.x-px)*dirX+(pair.b.y-py)*dirY;
+   if(towardB<0||towardA<0)continue;
    const r=pair.waist;
    // Keep the bridge narrow in open space, but grow a broad concave fillet
    // at contact. The fillet is limited to the local junction, not the whole
