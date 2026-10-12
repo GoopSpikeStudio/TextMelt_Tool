@@ -177,7 +177,7 @@ function goopPairs(bs){
   // Neck thickness grows continuously as the shapes approach each other.
   const waist=Math.max(1,s.strength*.28*fade*(1+1.65*proximity*proximity));
   const shoulder=5+s.softness*.32*(1+.55*proximity);
-  out.push({p,q,ux,uy,gap,waist,shoulder,midX:(p.x+q.x)/2,midY:(p.y+q.y)/2});
+  out.push({a,b,p,q,ux,uy,gap,waist,shoulder,midX:(p.x+q.x)/2,midY:(p.y+q.y)/2});
  }
  return out;
 }
@@ -205,6 +205,19 @@ function shapeField(step=1){
    const vx=bx-ax,vy=by-ay,den=vx*vx+vy*vy;
    const t=Math.max(0,Math.min(1,((px-ax)*vx+(py-ay)*vy)/den));
    const capsule=Math.hypot(px-ax-vx*t,py-ay-vy*t)-r;
+   // True rounded union of the TWO original surfaces at contact.
+   // This produces the broad concave fillet in the reference image,
+   // rather than merely smoothing the thin capsule's shoulders.
+   const contact=Math.max(0,1-pair.gap/Math.max(1,Math.min(45,s.distance)));
+   if(contact>0&&s.softness>0){
+    const k=(12+s.softness*.8)*contact*contact;
+    if(k>0.01){
+     const da=sdf(px,py,pair.a),db=sdf(px,py,pair.b);
+     if(Math.abs(da-db)<k&&Math.min(da,db)>-k){
+      d=Math.min(d,smooth(da,db,k));
+     }
+    }
+   }
    if(capsule>fillet||d<-(fillet+r))continue;
    // Polynomial smooth union rounds the *inside corner* between the two
    // surfaces. The width of this fillet increases smoothly near contact.
