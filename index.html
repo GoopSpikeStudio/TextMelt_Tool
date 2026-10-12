@@ -200,7 +200,6 @@ function shapeField(step=1){
   for(const pair of pairs){
    // Use the established rounded geometry without clipping the SDF by
    // half-planes. Hard or feathered directional cuts caused stray spikes.
-   const originalD=d;
    const r=pair.waist;
    // Keep the bridge narrow in open space, but grow a broad concave fillet
    // at contact. The fillet is limited to the local junction, not the whole
@@ -225,8 +224,13 @@ function shapeField(step=1){
     const k=(12+s.softness*.8)*contact*contact;
     if(k>0.01){
      const da=sdf(px,py,pair.a),db=sdf(px,py,pair.b);
-     if(Math.abs(da-db)<k&&Math.min(da,db)>-k){
-      d=Math.min(d,smooth(da,db,k));
+     // Blend only where BOTH surfaces are near their actual boundaries.
+     // Deep overlap or a far outer edge must never generate a new lobe.
+     const nearA=Math.max(0,Math.min(1,(k-Math.abs(da))/Math.max(.001,k)));
+     const nearB=Math.max(0,Math.min(1,(k-Math.abs(db))/Math.max(.001,k)));
+     const localK=k*nearA*nearB;
+     if(localK>.01&&Math.abs(da-db)<localK){
+      d=Math.min(d,smooth(da,db,localK));
      }
     }
    }
@@ -236,16 +240,7 @@ function shapeField(step=1){
    const k=fillet;
    const blend=Math.max(0,k-Math.abs(d-capsule))/k;
    d=Math.min(d,capsule)-blend*blend*k*.25;
-   // A continuous, rounded spatial envelope around the whole bridge.
-   // Unlike the previous endpoint masks, this has no hard t boundaries
-   // or separate islands when the fields overlap or rotate.
-   const segmentDistance=Math.hypot(px-ax-vx*t,py-ay-vy*t);
-   const thickness=Math.min(pair.a.h,pair.b.h);
-   const inner=Math.max(r+fillet*.65,6);
-   const outer=Math.max(inner+10,Math.min(thickness*.46,inner+fillet*.9+10));
-   const envelope=Math.max(0,Math.min(1,(outer-segmentDistance)/(outer-inner)));
-   const weight=envelope*envelope*(3-2*envelope);
-   d=originalD+(d-originalD)*weight;
+
   }
   for(const p of sp){
    if(Math.abs(px-p.x)<p.len+p.half+3&&Math.abs(py-p.y)<p.len+p.half+3)
