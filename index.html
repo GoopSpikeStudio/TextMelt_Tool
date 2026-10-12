@@ -198,22 +198,8 @@ function shapeField(step=1){
   // extend into the original shapes; a smooth minimum rounds the shoulders.
   // Unlike subtractive attraction, a capsule cannot pinch into an hourglass.
   for(const pair of pairs){
-   // Directional melt: only modify the facing halves of each element.
-   // The original SDF remains untouched on the opposite sides, avoiding
-   // bumps on the top of the upper text field or bottom of the lower one.
-   const cx=pair.b.x-pair.a.x,cy=pair.b.y-pair.a.y;
-   const clen=Math.hypot(cx,cy);
-   if(clen<.001)continue;
-   const dirX=cx/clen,dirY=cy/clen;
-   const towardB=(px-pair.a.x)*dirX+(py-pair.a.y)*dirY;
-   const towardA=(pair.b.x-px)*dirX+(pair.b.y-py)*dirY;
-   // Feather the directional influence instead of clipping at a hard
-   // half-plane (which creates flat seams and diagonal spikes).
-   const feather=Math.max(12,Math.min(32,Math.min(pair.a.h,pair.b.h)*.24));
-   const smoothGate=v=>{const t=Math.max(0,Math.min(1,(v+feather*.45)/feather));return t*t*(3-2*t)};
-   const directionWeight=smoothGate(towardB)*smoothGate(towardA);
-   if(directionWeight<.0001)continue;
-   const originalD=d;
+   // Use the established rounded geometry without clipping the SDF by
+   // half-planes. Hard or feathered directional cuts caused stray spikes.
    const r=pair.waist;
    // Keep the bridge narrow in open space, but grow a broad concave fillet
    // at contact. The fillet is limited to the local junction, not the whole
@@ -221,10 +207,13 @@ function shapeField(step=1){
    const proximity=Math.max(0,1-pair.gap/Math.max(1,Math.min(s.distance,82)));
    const shoulder=pair.shoulder;
    const fillet=shoulder*(.65+1.45*proximity*proximity);
-   const inset=shoulder*.7+r*.5;
+   // Keep the capsule end inside the local shape: the capsule must not
+   // emerge from the opposite edge of a shallow text box.
+   const inset=Math.min(shoulder*.7+r*.5,Math.min(pair.a.h,pair.b.h)*.2);
    const ax=pair.p.x-pair.ux*inset,ay=pair.p.y-pair.uy*inset;
    const bx=pair.q.x+pair.ux*inset,by=pair.q.y+pair.uy*inset;
    const vx=bx-ax,vy=by-ay,den=vx*vx+vy*vy;
+   if(den<.0001)continue;
    const t=Math.max(0,Math.min(1,((px-ax)*vx+(py-ay)*vy)/den));
    const capsule=Math.hypot(px-ax-vx*t,py-ay-vy*t)-r;
    // True rounded union of the TWO original surfaces at contact.
@@ -246,8 +235,7 @@ function shapeField(step=1){
    const k=fillet;
    const blend=Math.max(0,k-Math.abs(d-capsule))/k;
    d=Math.min(d,capsule)-blend*blend*k*.25;
-   // Fade the *entire* melt contribution at the directional boundary.
-   d=originalD+(d-originalD)*directionWeight;
+
   }
   for(const p of sp){
    if(Math.abs(px-p.x)<p.len+p.half+3&&Math.abs(py-p.y)<p.len+p.half+3)
