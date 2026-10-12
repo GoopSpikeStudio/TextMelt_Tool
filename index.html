@@ -231,13 +231,13 @@ for(let k of Object.keys(s)){let el=$(k);if(!el)continue;el.value=s[k];if(el.typ
 $('fontFile').onchange=async e=>{let file=e.target.files[0];if(!file)return;let name='Uploaded'+Date.now(),face=new FontFace(name,'url('+URL.createObjectURL(file)+')');try{await face.load();document.fonts.add(face);$('font').add(new Option(file.name,name));if(chosen()?.type==='text'){chosen().font=name;refresh();render()}}catch(err){alert(err.message)}};
 function pos(e){let r=C.getBoundingClientRect();return {x:(e.clientX-r.left)*W/r.width,y:(e.clientY-r.top)*H/r.height}}
 function hit(p){for(let i=fields.length-1;i>=0;i--){let f=fields[i],m=f.type==='text'?metrics(f):null,w=m?m.max:f.width,h=m?m.lines.length*m.lh:f.height,dx=p.x-f.x,dy=p.y-f.y,a=f.rotation*Math.PI/180,x=dx*Math.cos(a)+dy*Math.sin(a),y=-dx*Math.sin(a)+dy*Math.cos(a);if(Math.abs(x)<w/2+s.pad+10&&Math.abs(y)<h/2+s.pad+10)return f}return null}
-C.onpointerdown=e=>{let p=pos(e),f=hit(p);if(!f){if(!e.shiftKey)select(null);return}
+C.onpointerdown=e=>{let p=pos(e),f=hit(p);if(canPan()&&(spaceHeld||!f)){if(startPan(e))return}if(!f){if(!e.shiftKey)select(null);return}
  if(e.shiftKey){select(f.id,true);return}
  if(!multi.has(f.id))select(f.id);
  drag={p,orig:fields.filter(a=>multi.has(a.id)).map(a=>({id:a.id,x:a.x,y:a.y,rot:a.rotation})),rotate:e.altKey};
  C.setPointerCapture(e.pointerId)};
-C.onpointermove=e=>{if(!drag)return;let p=pos(e),dx=p.x-drag.p.x,dy=p.y-drag.p.y;for(const orig of drag.orig){const f=fields.find(a=>a.id===orig.id);if(!f)continue;if(drag.rotate)f.rotation=orig.rot+dx*.5;else{const x=orig.x+dx,y=orig.y+dy;f.x=s.snap?Math.round(x/s.grid)*s.grid:x;f.y=s.snap?Math.round(y/s.grid)*s.grid:y}}render()};
-C.onpointerup=()=>{drag=null;refresh()};C.onpointercancel=()=>drag=null;C.ondblclick=e=>{let f=hit(pos(e));if(f?.type==='text'){select(f.id);$('text').focus();$('text').select()}};
+C.onpointermove=e=>{if(panDrag){panX=panDrag.px+e.clientX-panDrag.x;panY=panDrag.py+e.clientY-panDrag.y;applyPan();return}if(!drag)return;let p=pos(e),dx=p.x-drag.p.x,dy=p.y-drag.p.y;for(const orig of drag.orig){const f=fields.find(a=>a.id===orig.id);if(!f)continue;if(drag.rotate)f.rotation=orig.rot+dx*.5;else{const x=orig.x+dx,y=orig.y+dy;f.x=s.snap?Math.round(x/s.grid)*s.grid:x;f.y=s.snap?Math.round(y/s.grid)*s.grid:y}}render()};
+C.onpointerup=()=>{if(panDrag){panDrag=null;C.style.cursor=spaceHeld?'grab':'';return}drag=null;refresh()};C.onpointercancel=()=>{panDrag=null;drag=null;C.style.cursor=''};C.ondblclick=e=>{let f=hit(pos(e));if(f?.type==='text'){select(f.id);$('text').focus();$('text').select()}};
 function bounds(f){
  const m=f.type==='text'?metrics(f):null,w=(m?m.max:f.width)+s.pad*2,h=(m?m.lines.length*m.lh:f.height)+s.pad*2;
  const a=f.rotation*Math.PI/180,ew=Math.abs(Math.cos(a))*w+Math.abs(Math.sin(a))*h,eh=Math.abs(Math.sin(a))*w+Math.abs(Math.cos(a))*h;
@@ -274,6 +274,24 @@ $('exportPNG').onclick=()=>{draw(true);const out=document.createElement('canvas'
 $('exportSVG').onclick=()=>{const path=traceField(shapeField(1));const esc=t=>String(t).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/"/g,'&quot;');let svg='<svg xmlns="http://www.w3.org/2000/svg" width="'+W+'" height="'+H+'" viewBox="0 0 '+W+' '+H+'"><path fill="'+s.bubble+'" fill-rule="evenodd" d="'+path+'"/>';for(const f of fields){svg+='<g transform="translate('+f.x+' '+f.y+') rotate('+f.rotation+')">';if(f.type==='text'){const m=metrics(f),anchor=f.align==='left'?'start':f.align==='right'?'end':'middle',x=f.align==='left'?-m.max/2:f.align==='right'?m.max/2:0;svg+='<text font-family="'+esc(f.font)+'" font-size="'+f.size+'" fill="'+s.ink+'" text-anchor="'+anchor+'" dominant-baseline="middle">';m.lines.forEach((line,i)=>svg+='<tspan x="'+x+'" y="'+((i-(m.lines.length-1)/2)*m.lh)+'">'+esc(line)+'</tspan>');svg+='</text>'}else if(f.img){svg+='<image x="'+(-f.width/2)+'" y="'+(-f.height/2)+'" width="'+f.width+'" height="'+f.height+'" href="'+f.img.src+'"/>'}svg+='</g>'}svg+='</svg>';save(new Blob([svg],{type:'image/svg+xml'}),'textmelt.svg')};
 const shell=$('canvasShell'),stage=document.querySelector('.stage'),app=$('app');
 let resizing=null,leftWidth=270,rightWidth=315,canvasHeight=null,viewScale=1,zoom=1,workspaceScale=null;
+let panX=0,panY=0,panDrag=null,spaceHeld=false;
+function canPan(){return zoom>1.001}
+function clampPan(){
+ if(!canPan()){panX=0;panY=0;return}
+ const maxX=Math.max(0,(shell.offsetWidth-stage.clientWidth+44)/2);
+ const maxY=Math.max(0,(shell.offsetHeight-stage.clientHeight+44)/2);
+ panX=clamp(panX,-maxX,maxX);panY=clamp(panY,-maxY,maxY);
+}
+function applyPan(){clampPan();shell.style.transform='translate('+panX+'px,'+panY+'px)';placeHandles()}
+function startPan(e){
+ if(!canPan()||e.button!==0)return false;
+ e.preventDefault();panDrag={x:e.clientX,y:e.clientY,px:panX,py:panY,id:e.pointerId};
+ C.setPointerCapture(e.pointerId);C.style.cursor='grabbing';return true;
+}
+window.addEventListener('keydown',e=>{if(e.code==='Space'&&!/INPUT|TEXTAREA|SELECT/.test(document.activeElement.tagName)){spaceHeld=true;if(canPan())C.style.cursor='grab';e.preventDefault()}});
+window.addEventListener('keyup',e=>{if(e.code==='Space'){spaceHeld=false;if(!panDrag)C.style.cursor=''}});
+window.addEventListener('blur',()=>{spaceHeld=false;panDrag=null;C.style.cursor=''});
+
 const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
 function placeHandles(){
  const rect=shell.getBoundingClientRect();
@@ -299,7 +317,7 @@ function layout(){
  shell.style.backgroundSize=(s.grid*viewScale)+'px '+(s.grid*viewScale)+'px';
  shell.style.backgroundColor=s.gridBg;
  shell.style.backgroundImage='radial-gradient('+s.gridColor+' 1px,transparent 1px)';
- placeHandles();
+ applyPan();
 }
 function setCanvasDimensions(w,h){
  w=clamp(Math.round(w),320,5000);h=clamp(Math.round(h),280,5000);
@@ -319,7 +337,7 @@ $('applyCanvas').onclick=()=>{
 };
 for(const id of ['canvasW','canvasH'])$(id).addEventListener('keydown',e=>{if(e.key==='Enter')$('applyCanvas').click()});
 const zoomSlider=$('zoomLevel'),zoomValue=$('zoomValue');
-function setZoom(v){zoom=clamp(v,.25,3);zoomSlider.value=Math.round(zoom*100);zoomValue.textContent=Math.round(zoom*100)+'%';layout();}
+function setZoom(v){zoom=clamp(v,.25,3);if(!canPan()){panX=0;panY=0;C.style.cursor='';}zoomSlider.value=Math.round(zoom*100);zoomValue.textContent=Math.round(zoom*100)+'%';layout();}
 zoomSlider.addEventListener('input',()=>setZoom(Number(zoomSlider.value)/100));
 $('zoomOut').onclick=()=>setZoom(zoom-.1);
 $('zoomIn').onclick=()=>setZoom(zoom+.1);
