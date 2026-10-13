@@ -250,15 +250,19 @@ function shapeField(step=1){
  }
  return {f,nx,ny,step};
 }
-function renderMask(){
- const field=shapeField(1),{f,nx}=field,mask=document.createElement('canvas');
- mask.width=W;mask.height=H;
- const g=mask.getContext('2d'),pixels=g.createImageData(W,H);
+function renderMask(preview=false){
+ // Evaluate fewer SDF samples while dragging; draw the low-res mask
+ // smoothly at document size. Release always rebuilds at full quality.
+ const step=preview?3:1;
+ const field=shapeField(step),{f,nx}=field;
+ const mw=Math.ceil(W/step),mh=Math.ceil(H/step);
+ const mask=document.createElement('canvas');mask.width=mw;mask.height=mh;
+ const g=mask.getContext('2d'),pixels=g.createImageData(mw,mh);
  const rgb=s.bubble.match(/[0-9a-f]{2}/gi).map(v=>parseInt(v,16));
- for(let y=0;y<H;y++)for(let x=0;x<W;x++){
+ for(let y=0;y<mh;y++)for(let x=0;x<mw;x++){
   const d=(f[y*nx+x]+f[y*nx+x+1]+f[(y+1)*nx+x]+f[(y+1)*nx+x+1])*.25;
   const alpha=d<-.25?1:d>.25?0:Math.max(0,Math.min(1,.5-d));
-  const z=(y*W+x)*4;
+  const z=(y*mw+x)*4;
   pixels.data[z]=rgb[0];pixels.data[z+1]=rgb[1];pixels.data[z+2]=rgb[2];pixels.data[z+3]=Math.round(alpha*255);
  }
  g.putImageData(pixels,0,0);return mask;
@@ -297,7 +301,7 @@ function traceField(field){
  }
  return path;
 }
-function draw(exporting=false){ctx.clearRect(0,0,W,H);if(!exporting){ctx.fillStyle=s.gridBg;ctx.fillRect(0,0,W,H);ctx.fillStyle=s.gridColor;for(let x=s.grid/2;x<W;x+=s.grid)for(let y=s.grid/2;y<H;y+=s.grid){ctx.beginPath();ctx.arc(x,y,1.15,0,Math.PI*2);ctx.fill()}}if(dirty||!shapeCache){shapeCache=renderMask();dirty=false}ctx.imageSmoothingEnabled=true;ctx.drawImage(shapeCache,0,0,W,H);ctx.fillStyle=s.ink;ctx.textBaseline='middle';for(let f of fields){ctx.save();ctx.translate(f.x,f.y);ctx.rotate(f.rotation*Math.PI/180);if(f.type==='image'){if(f.img)ctx.drawImage(f.img,-f.width/2,-f.height/2,f.width,f.height)}else if(f.type==='text'){let m=metrics(f);ctx.font=f.size+'px '+fontStack(f.font);ctx.textAlign=f.align;let x=f.align==='left'?-m.max/2:f.align==='right'?m.max/2:0;m.lines.forEach((line,i)=>ctx.fillText(line,x,(i-(m.lines.length-1)/2)*m.lh+m.inkCenter))}ctx.restore()}if(!exporting){for(const f of fields.filter(a=>multi.has(a.id))){let m=f.type==='text'?metrics(f):null,w=m?m.max:f.width,h=m?(m.lines.length-1)*m.lh+m.inkHeight:f.height;ctx.save();ctx.translate(f.x,f.y);ctx.rotate(f.rotation*Math.PI/180);const left=-w/2-s.pad-3,top=-h/2-s.pad-3,bw=w+2*s.pad+6,bh=h+2*s.pad+6;
+function draw(exporting=false){ctx.clearRect(0,0,W,H);if(!exporting){ctx.fillStyle=s.gridBg;ctx.fillRect(0,0,W,H);ctx.fillStyle=s.gridColor;for(let x=s.grid/2;x<W;x+=s.grid)for(let y=s.grid/2;y<H;y+=s.grid){ctx.beginPath();ctx.arc(x,y,1.15,0,Math.PI*2);ctx.fill()}}if(dirty||!shapeCache){shapeCache=renderMask(!!drag);dirty=false}ctx.imageSmoothingEnabled=true;ctx.drawImage(shapeCache,0,0,W,H);ctx.fillStyle=s.ink;ctx.textBaseline='middle';for(let f of fields){ctx.save();ctx.translate(f.x,f.y);ctx.rotate(f.rotation*Math.PI/180);if(f.type==='image'){if(f.img)ctx.drawImage(f.img,-f.width/2,-f.height/2,f.width,f.height)}else if(f.type==='text'){let m=metrics(f);ctx.font=f.size+'px '+fontStack(f.font);ctx.textAlign=f.align;let x=f.align==='left'?-m.max/2:f.align==='right'?m.max/2:0;m.lines.forEach((line,i)=>ctx.fillText(line,x,(i-(m.lines.length-1)/2)*m.lh+m.inkCenter))}ctx.restore()}if(!exporting){for(const f of fields.filter(a=>multi.has(a.id))){let m=f.type==='text'?metrics(f):null,w=m?m.max:f.width,h=m?(m.lines.length-1)*m.lh+m.inkHeight:f.height;ctx.save();ctx.translate(f.x,f.y);ctx.rotate(f.rotation*Math.PI/180);const left=-w/2-s.pad-3,top=-h/2-s.pad-3,bw=w+2*s.pad+6,bh=h+2*s.pad+6;
 ctx.setLineDash([]);
 ctx.lineWidth=1.75;ctx.strokeStyle='#B5EF4B';
 const radius=Math.min(12,bw/2,bh/2);
@@ -357,7 +361,7 @@ C.onpointerdown=e=>{let p=pos(e),f=hit(p);if(canPan()&&(spaceHeld||!f)){if(start
  drag={p,orig:fields.filter(a=>multi.has(a.id)).map(a=>({id:a.id,x:a.x,y:a.y,rot:a.rotation})),rotate:e.altKey};
  C.setPointerCapture(e.pointerId)};
 C.onpointermove=e=>{if((panDrag||drag)&&!(e.buttons&1)){panDrag=null;drag=null;C.style.cursor='';refresh();return}if(panDrag){panX=panDrag.px+e.clientX-panDrag.x;panY=panDrag.py+e.clientY-panDrag.y;applyPan();return}if(!drag)return;let p=pos(e),dx=p.x-drag.p.x,dy=p.y-drag.p.y;for(const orig of drag.orig){const f=fields.find(a=>a.id===orig.id);if(!f)continue;if(drag.rotate)f.rotation=orig.rot+dx*.5;else{const x=orig.x+dx,y=orig.y+dy;f.x=s.snap?Math.round(x/s.grid)*s.grid:x;f.y=s.snap?Math.round(y/s.grid)*s.grid:y}}render()};
-C.onpointerup=()=>{if(panDrag){panDrag=null;C.style.cursor=spaceHeld?'grab':'';return}drag=null;refresh()};C.onpointercancel=()=>{panDrag=null;drag=null;C.style.cursor=''};C.ondblclick=e=>{let f=hit(pos(e));if(f?.type==='text'){select(f.id);$('text').focus();$('text').select()}};
+C.onpointerup=()=>{if(panDrag){panDrag=null;C.style.cursor=spaceHeld?'grab':'';return}const wasDragging=!!drag;drag=null;refresh();if(wasDragging)render()};C.onpointercancel=()=>{panDrag=null;drag=null;C.style.cursor=''};C.ondblclick=e=>{let f=hit(pos(e));if(f?.type==='text'){select(f.id);$('text').focus();$('text').select()}};
 function bounds(f){
  const m=f.type==='text'?metrics(f):null,w=(m?m.max:f.width)+s.pad*2,h=(m?(m.lines.length-1)*m.lh+m.inkHeight:f.height)+s.pad*2;
  const a=f.rotation*Math.PI/180,ew=Math.abs(Math.cos(a))*w+Math.abs(Math.sin(a))*h,eh=Math.abs(Math.sin(a))*w+Math.abs(Math.cos(a))*h;
@@ -500,7 +504,7 @@ document.querySelectorAll('[data-resize]').forEach(handle=>{
  const end=e=>{if(resizing&&resizing.id!==e.pointerId)return;resizing=null;try{if(handle.hasPointerCapture(e.pointerId))handle.releasePointerCapture(e.pointerId)}catch(_){}layout()};
  handle.addEventListener('pointerup',end);handle.addEventListener('pointercancel',end);
 });
-window.addEventListener('pointerup',()=>{if(resizing){resizing=null;layout()}if(panDrag||drag){panDrag=null;drag=null;C.style.cursor='';refresh()}},true);
+window.addEventListener('pointerup',()=>{if(resizing){resizing=null;layout()}if(panDrag||drag){const wasDragging=!!drag;panDrag=null;drag=null;C.style.cursor='';refresh();if(wasDragging)render()}},true);
 window.addEventListener('pointercancel',()=>{resizing=null;panDrag=null;drag=null;C.style.cursor='';layout()},true);
 window.addEventListener('blur',()=>{resizing=null;panDrag=null;drag=null;C.style.cursor='';layout()});
 window.addEventListener('resize',layout);
